@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\Zonas\Index as ZonasIndex;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
+use App\Livewire\Portal\CarruselCampanas;
 use App\Livewire\Portal\PinLogin;
 
 Route::get('/zona-no-encontrada', function () {
@@ -11,7 +12,7 @@ Route::get('/zona-no-encontrada', function () {
 })->name('zona.not-found');
 
 // Portal Hotspot - Mikrotik Redirection
-Route::get('/portal/{zona:id_personalizado}', PinLogin::class)
+Route::get('/portal/{zona:id_personalizado}', CarruselCampanas::class)
     ->name('portal.login')
     ->missing(function () {
         return redirect()->route('zona.not-found');

@@ -1,162 +1,90 @@
-<div class="w-full relative min-h-[80vh] flex flex-col items-center justify-center p-4">
+<div>
+    <!-- Optional Custom Banner/Header if required -->
+    {{-- <div class="bg-primary text-white text-center py-2 font-semibold shadow-sm text-sm">
+        {{ $zona->nombre }} - Publicidad
+    </div> --}}
 
-    @if($finished)
-        <!-- FINISHED CAROUSEL: SHOW LOGIN -->
-        <div class="w-full max-w-sm mx-auto animate-fade-in">
-            @if($zona->venta_vouchers_activa)
-                <!-- Phase 2 Stub -->
-                <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 mb-6 text-center">
-                    <p class="font-semibold text-sm mb-2">Planes de Internet (Fase 2)</p>
-                    <p class="text-xs">Usa tu Pin si ya tienes cuenta, o compra un voucher abajo.</p>
-                </div>
-            @endif
-
-            <livewire:portal.pin-login :zona="$zona" />
-        </div>
-
-    @else
-        <!-- CAROUSEL SLIDE -->
-        @php
-            $campana = $campanas[$currentIndex];
-            $hasSkip = !is_null($campana->skip_after_seconds);
-            $skipSecs = $campana->skip_after_seconds ?? 0;
-            $duration = $campana->duracion ?? 8;
-        @endphp
-
-        <!-- Use wire:key strictly on the root element of this condition to force Alpine re-init per slide -->
-        <div wire:key="slide-{{ $campana->id }}" 
-             class="w-full h-full flex flex-col items-center justify-center relative bg-black rounded-xl overflow-hidden aspect-[4/3] md:aspect-video"
-             x-data="{
-                type: '{{ $campana->tipo }}',
-                duration: {{ $duration }},
-                timeLeft: {{ $duration }},
-                skipSecs: {{ $skipSecs }},
-                hasSkip: {{ $hasSkip ? 'true' : 'false' }},
-                skipDisabled: true,
-                skipTextOrig: '{{ $campana->skip_texto }}',
-                skipTextRender: '',
-                videoMuted: true,
+    @if(count($campanas) > 0)
+        <!-- AUTOMATIC CAROUSEL (ALPINE.JS) -->
+        <div x-data="{
+                activeSlide: 0,
+                slides: {{ count($campanas) }},
                 timer: null,
-
                 init() {
-                    if (this.hasSkip) {
-                        this.updateSkipText();
+                    if (this.slides > 1) {
+                        this.startTimer();
                     }
+                },
+                startTimer() {
+                    this.timer = setInterval(() => this.next(), 6000);
+                },
+                resetTimer() {
+                    clearInterval(this.timer);
                     this.startTimer();
                 },
-
-                startTimer() {
-                    if (this.timer) clearInterval(this.timer);
-                    this.timer = setInterval(() => {
-                        if (this.timeLeft > 0) this.timeLeft--;
-
-                        if (this.hasSkip) {
-                            if (this.skipSecs > 0) this.skipSecs--;
-                            if (this.skipSecs <= 0) {
-                                this.skipDisabled = false;
-                                this.skipTextRender = 'Omitir →';
-                            } else {
-                                this.updateSkipText();
-                            }
-                        }
-
-                        if (this.timeLeft <= 0 && this.type === 'imagen') {
-                            this.autoAdvance();
-                        }
-                    }, 1000);
+                next() {
+                    this.activeSlide = (this.activeSlide + 1) % this.slides;
                 },
-
-                updateSkipText() {
-                    this.skipTextRender = this.skipTextOrig.replace('{s}', this.skipSecs);
-                },
-
-                autoAdvance() {
-                    clearInterval(this.timer);
-                    setTimeout(() => $wire.nextSlide(), 100);
-                },
-
-                onVideoEnded() {
-                    this.autoAdvance();
-                },
-
-                toggleMute(el) {
-                    this.videoMuted = !this.videoMuted;
-                    if(el) el.muted = this.videoMuted;
+                prev() {
+                    this.activeSlide = (this.activeSlide - 1 + this.slides) % this.slides;
                 }
-             }">
+            }" 
+            class="relative w-full aspect-video bg-black overflow-hidden object-contain shadow-inner">
+            
+            @foreach($campanas as $index => $campana)
+                @php
+                    $path = str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path);
+                @endphp
+                <div x-show="activeSlide === {{ $index }}"
+                     x-transition:enter="transition ease-in-out duration-700"
+                     x-transition:enter-start="opacity-0 scale-105"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in-out duration-700 absolute inset-0"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="w-full h-full">
+                    
+                    @if($campana->tipo === 'video')
+                        <!-- Videos autoplay perfectly because they are handled internally by browser when displayed -->
+                        <video src="{{ $path }}" autoplay muted loop class="w-full h-full object-cover" alt="{{ $campana->titulo }}"></video>
+                    @else
+                        <img src="{{ $path }}" class="w-full h-full object-cover" alt="{{ $campana->titulo }}">
+                    @endif
+                    
+                    <!-- Title Overlay -->
+                    <div class="absolute top-0 left-0 w-full p-2 bg-gradient-to-b from-black/60 to-transparent text-white text-sm font-semibold pointer-events-none text-center drop-shadow-md">
+                        {{ $campana->titulo }}
+                    </div>
+                </div>
+            @endforeach
 
-            <!-- Visual Content -->
-            @if($campana->tipo === 'imagen')
-                <img src="{{ str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path) }}" 
-                     class="w-full h-full object-cover object-center absolute inset-0 z-0">
-            @elseif($campana->tipo === 'video')
-                <video src="{{ str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path) }}" 
-                       class="w-full h-full object-cover object-center absolute inset-0 z-0" 
-                       x-ref="vid"
-                       autoplay muted playsinline :muted="videoMuted" @ended="onVideoEnded()">
-                </video>
-
-                <!-- Unmute Button top-right -->
-                <button @click="toggleMute($refs.vid)" class="absolute top-4 right-4 z-20 bg-black/50 text-white p-2 rounded-full backdrop-blur hover:bg-black/70 transition">
-                    <!-- Icon switches based on muted state -->
-                    <template x-if="videoMuted">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z m9.172-5a3 3 0 010 6A3 3 0 0014 10.586m3.844-3.844A8 8 0 0122 12a8 8 0 01-2.922 6.078M18 10v4"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path></svg>
-                    </template>
-                    <template x-if="!videoMuted">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-                    </template>
-                </button>
-
-                <!-- Skip Button bottom-right for video -->
-                <template x-if="hasSkip">
-                    <button :disabled="skipDisabled" 
-                            @click="if(!skipDisabled) autoAdvance()"
-                            class="absolute bottom-4 right-4 z-20 px-4 py-2 rounded-full text-sm font-semibold backdrop-blur transition-colors disabled:bg-black/40 disabled:text-gray-300 disabled:cursor-not-allowed bg-white/90 text-black hover:bg-white disabled:hover:bg-black/40">
-                        <span x-text="skipTextRender"></span>
-                    </button>
-                </template>
+            <!-- Indicators bottom -->
+            @if(count($campanas) > 1)
+            <div class="absolute bottom-3 left-0 w-full flex justify-center space-x-2 z-10">
+                @foreach($campanas as $index => $campana)
+                    <button @click="activeSlide = {{ $index }}; resetTimer();" 
+                            :class="{'bg-primary w-4': activeSlide === {{ $index }}, 'bg-white/60 w-2': activeSlide !== {{ $index }}}" 
+                            class="h-2 rounded-full transition-all duration-300 shadow"></button>
+                @endforeach
+            </div>
             @endif
 
-            <!-- Overlays & Controls for Image (or countdown overlay for video) -->
-            <div class="absolute inset-0 z-10 flex flex-col justify-between pointer-events-none p-4">
-                
-                <!-- Top Row (Title / Countdown) -->
-                <div class="flex justify-between items-start w-full">
-                    <h2 class="text-white font-bold drop-shadow-md bg-black/30 px-3 py-1 rounded-md text-sm md:text-base pointer-events-auto">
-                        {{ $campana->titulo }}
-                    </h2>
+            <!-- Navigation Arrows (Optional, un-comment if needed later) -->
+            {{-- 
+            <button @click="prev(); resetTimer();" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/30 text-white rounded-full p-1 border border-white/20 hover:bg-black/60 transition shadow backdrop-blur-sm z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+            <button @click="next(); resetTimer();" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/30 text-white rounded-full p-1 border border-white/20 hover:bg-black/60 transition shadow backdrop-blur-sm z-10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+            --}}
+        </div>
+    @endif
 
-                    @if($campana->countdown_visible)
-                        @if($campana->countdown_style === 'barra')
-                            <!-- progress bar indicator overlay top -->
-                            <div class="w-24 h-2 bg-white/30 rounded-full overflow-hidden backdrop-blur pointer-events-auto shadow-sm">
-                                <div class="h-full bg-white transition-all duration-1000 ease-linear" 
-                                     :style="`width: ${(timeLeft / duration) * 100}%`"></div>
-                            </div>
-                        @else
-                            <!-- circular indicator -->
-                            <div class="w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center pointer-events-auto shadow-sm">
-                                <span class="text-white text-sm font-bold" x-text="timeLeft"></span>
-                            </div>
-                        @endif
-                    @endif
-                </div>
+    <!-- FORMULARIO DE LOGGEO (SIEMPRE VISIBLE ABAJO) -->
+    <livewire:portal.pin-login :zona="$zona" />
 
-                <!-- Middle (Nav Arrows) -->
-                <div class="w-full flex justify-between pointer-events-auto">
-                    <button wire:click="prevSlide" class="bg-black/30 text-white rounded-full p-2 hover:bg-black/60 transition backdrop-blur {{ $currentIndex === 0 ? 'opacity-0 cursor-default' : '' }}" {{ $currentIndex === 0 ? 'disabled' : '' }}>
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
-
-                    <button wire:click="nextSlide" class="bg-black/30 text-white rounded-full p-2 hover:bg-black/60 transition backdrop-blur">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                </div>
-                
-                <!-- Bottom spacing (leave empty so nav arrows are centered) -->
-                <div></div>
-
-            </div>
+    @if($zona->venta_vouchers_activa)
+        <!-- Phase 2 Stub (if Vouchers mode active on zone) -->
+        <div class="bg-yellow-50 border-t border-yellow-200 text-yellow-800 rounded-b-2xl p-4 text-center">
+            <p class="font-semibold text-sm">Planes de Internet Adicionales</p>
+            <p class="text-xs">Este módulo de compra y venta estará disponible próximamente.</p>
         </div>
     @endif
 
@@ -169,5 +97,4 @@
         <span class="font-bold text-sm">Visítanos en Facebook &rarr;</span>
     </a>
     @endif
-
 </div>
