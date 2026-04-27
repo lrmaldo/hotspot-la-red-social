@@ -1,11 +1,36 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Admin\Zonas\Index as ZonasIndex;
+use App\Livewire\Admin\Campanas\Index as CampanasIndex;
+use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
+use App\Livewire\Portal\PinLogin;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/zona-no-encontrada', function () {
+    return view('zona-no-encontrada');
+})->name('zona.not-found');
 
+// Portal Hotspot - Mikrotik Redirection
+Route::get('/portal/{zona:id_personalizado}', PinLogin::class)
+    ->name('portal.login')
+    ->missing(function () {
+        return redirect()->route('zona.not-found');
+    });
+
+Route::get('/', function () {
+    return redirect()->route('zona.not-found');
+});
+
+// Rutas de Administración
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::view('/admin/dashboard', 'dashboard')->name('admin.dashboard');
+    
+    Route::prefix('admin')->group(function() {
+        Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
+        Route::get('/campanas', CampanasIndex::class)->name('admin.campanas');
+        Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion');
+    });
 });
 
 require __DIR__.'/settings.php';
