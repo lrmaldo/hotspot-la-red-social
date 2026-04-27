@@ -19,7 +19,7 @@ Route::get('/portal/{zona:id_personalizado}', PinLogin::class)
 
 Route::get('/', function () {
     return redirect()->route('zona.not-found');
-});
+})->name('home');
 
 // Rutas de Administración
 Route::middleware(['auth', 'verified'])->group(function () {

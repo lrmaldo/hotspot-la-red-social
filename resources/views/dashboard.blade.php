@@ -1,5 +1,5 @@
-<x-app-layout>
-    <x-slot name="title">Dashboard</x-slot>
+@component('layouts.app')
+    @slot('title', 'Dashboard')
 
     <div class="mb-6 px-4 sm:px-6 md:px-8">
         <h2 class="text-xl font-bold text-gray-800">Dashboard</h2>
@@ -49,4 +49,4 @@
             <p class="text-gray-600">Desde este panel puedes gestionar todas las zonas hotspot, las campañas que se visualizan en el portal cautivo y la configuración general de la red.</p>
         </div>
     </div>
-</x-app-layout>
+@endcomponent
