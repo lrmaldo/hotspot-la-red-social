@@ -28,6 +28,8 @@ class Index extends Component
     public string $hotspot_host = '';
     public string $tipo_autenticacion = 'pin';
     public bool $venta_vouchers_activa = false;
+    public bool $trial_enabled = false;
+    public int $trial_duration_seconds = 5;
     public $logo; // New upload
     public ?string $logo_path = null; // Existing path
     public string $color_primario = '#1a56db';
@@ -44,6 +46,8 @@ class Index extends Component
             'hotspot_host' => 'required|string|max:100',
             'tipo_autenticacion' => 'required|in:pin,sin_autenticacion',
             'venta_vouchers_activa' => 'boolean',
+            'trial_enabled' => 'boolean',
+            'trial_duration_seconds' => 'required|integer|min:0',
             'logo' => 'nullable|image|max:2048', // 2MB Max
             'color_primario' => 'required|string|size:7',
             'color_secundario' => 'required|string|size:7',
@@ -75,6 +79,8 @@ class Index extends Component
         $this->hotspot_host = $zona->hotspot_host;
         $this->tipo_autenticacion = $zona->tipo_autenticacion;
         $this->venta_vouchers_activa = $zona->venta_vouchers_activa;
+        $this->trial_enabled = $zona->trial_enabled;
+        $this->trial_duration_seconds = $zona->trial_duration_seconds;
         $this->logo_path = $zona->logo_path;
         $this->logo = null;
         $this->color_primario = $zona->color_primario;
@@ -131,6 +137,8 @@ class Index extends Component
         ]);
         $this->tipo_autenticacion = 'pin';
         $this->venta_vouchers_activa = false;
+        $this->trial_enabled = false;
+        $this->trial_duration_seconds = 5;
         $this->color_primario = '#1a56db';
         $this->color_secundario = '#ffffff';
         $this->is_active = true;

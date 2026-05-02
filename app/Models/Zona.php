@@ -16,6 +16,8 @@ class Zona extends Model
         'hotspot_host',
         'tipo_autenticacion',
         'venta_vouchers_activa',
+        'trial_enabled',
+        'trial_duration_seconds',
         'logo_path',
         'color_primario',
         'color_secundario',
@@ -27,6 +29,8 @@ class Zona extends Model
     {
         return [
             'venta_vouchers_activa' => 'boolean',
+            'trial_enabled' => 'boolean',
+            'trial_duration_seconds' => 'integer',
             'is_active' => 'boolean',
         ];
     }

@@ -223,6 +223,29 @@
 
                             </div>
 
+                            <!-- Configuración Trial -->
+                            <div class="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-md border border-blue-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <label class="flex items-center cursor-pointer">
+                                        <div class="relative">
+                                            <input type="checkbox" wire:model.live="trial_enabled" class="sr-only">
+                                            <div class="block bg-gray-300 w-10 h-6 rounded-full {{ $trial_enabled ? 'bg-green-600' : '' }} transition-colors"></div>
+                                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform {{ $trial_enabled ? 'transform translate-x-4' : '' }}"></div>
+                                        </div>
+                                        <div class="ml-3 text-sm font-bold text-blue-900">Habilitar Botón de Prueba (Trial)</div>
+                                    </label>
+                                </div>
+
+                                <div x-show="$wire.trial_enabled" x-transition>
+                                    <label class="block text-sm font-medium text-blue-800">Segundos de Cuenta Regresiva</label>
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <input type="number" wire:model="trial_duration_seconds" min="0" max="60" class="block w-24 rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                                        <span class="text-sm text-blue-600">segundos de espera antes de permitir la conexión gratuita.</span>
+                                    </div>
+                                    @error('trial_duration_seconds') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
                             <!-- Descripción -->
                             <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Notas / Descripción (Interna)</label>
