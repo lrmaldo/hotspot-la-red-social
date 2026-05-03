@@ -11,14 +11,30 @@ class PinLogin extends Component
 {
     public Zona $zona;
     public string $pin = '';
-    public string $dst = '';
     public int $countdown = 0;
     public bool $canTrial = false;
+
+    // Parámetros de MikroTik
+    public ?string $mac = null;
+    public ?string $ip = null;
+    public ?string $username = null;
+    public ?string $link_login = null;
+    public ?string $link_orig = null;
+    public ?string $error = null;
+    public ?string $chap_id = null;
+    public ?string $chap_challenge = null;
+    public ?string $link_login_only = null;
+    public ?string $link_orig_esc = null;
+    public ?string $mac_esc = null;
+
+    // Flag para mostrar el formulario final
+    public bool $readyToConnect = false;
+    public string $mikrotikUsername = '';
+    public string $mikrotikPassword = '';
 
     public function mount(Zona $zona)
     {
         $this->zona = $zona;
-        $this->dst = request()->get('dst', 'http://google.com'); // Fallback if no dst is provided in testing
         
         if ($this->zona->trial_enabled) {
             $this->countdown = $this->zona->trial_duration_seconds;
@@ -31,7 +47,7 @@ class PinLogin extends Component
             'pin' => ['required', 'string', 'min:4'],
         ]);
 
-        $this->redirectToHotspot($this->pin);
+        $this->prepareHotspotLogin($this->pin, $this->pin); // Usamos el PIN como usuario y contraseña
     }
 
     public function loginTrial()
@@ -40,32 +56,30 @@ class PinLogin extends Component
             return;
         }
 
-        $this->redirectToHotspot('trial');
+        // El trial de MikroTik habitualmente es MAC Address o "T-"
+        $trialUser = 'T-' . ($this->mac_esc ?? '');
+        $this->prepareHotspotLogin($trialUser, '');
     }
 
-    protected function redirectToHotspot(string $username)
+    protected function prepareHotspotLogin(string $user, string $pass)
     {
-        $url = sprintf(
-            'http://%s/login?username=%s&password=%s&dst=%s',
-            $this->zona->hotspot_host,
-            urlencode($username),
-            urlencode(''), // Password empty for trial or same as PIN if using Mikrotik logic
-            urlencode($this->dst)
-        );
-
-        // For trial, Mikrotik usually uses /login?username=T-XX:XX:XX or just trial=true
-        // But the user asked for a "login" via button. 
-        // If it's pure Mikrotik Trial, it might be different, but I'll follow the pattern.
-        if ($username === 'trial') {
-             $url = sprintf(
-                'http://%s/login?dst=%s',
-                $this->zona->hotspot_host,
-                urlencode($this->dst)
-            );
-            // Some setups use trial=yes or similar. 
+        $this->mikrotikUsername = $user;
+        
+        // Si hay CHAP-ID y CHAP-CHALLENGE, preparamos el password tipo CHAP.
+        // Si no, mandamos el texto plano (requiere http-pap o mac-cookie)
+        if (!empty($this->chap_id) && !empty($this->chap_challenge)) {
+             // El chap-challenge que envía MikroTik viene en hexadecimal. Hay que pasarlo a binario.
+             // El hash MD5 se calcula sobre: \0 + password + binary(chap_challenge)
+             // Nota: En PHP, pack('H*', $hex) lo pasa a binario.
+             // Sin embargo, para evitar problemas de codificación de PHP a MikroTik, 
+             // lo más seguro es preparar las variables y hacer que un formulario oculto en la vista
+             // ejecute el JS hexMD5() original de MikroTik como se solicitó.
+             $this->mikrotikPassword = $pass;
+             $this->readyToConnect = true;
+        } else {
+             $this->mikrotikPassword = $pass;
+             $this->readyToConnect = true;
         }
-
-        return redirect()->away($url);
     }
 
     public function render()

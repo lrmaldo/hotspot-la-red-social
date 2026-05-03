@@ -78,7 +78,20 @@
     @endif
 
     <!-- FORMULARIO DE LOGGEO (SIEMPRE VISIBLE ABAJO) -->
-    <livewire:portal.pin-login :zona="$zona" />
+    <livewire:portal.pin-login 
+        :zona="$zona"
+        :mac="$mac"
+        :ip="$ip"
+        :username="$username"
+        :link-login="$link_login"
+        :link-orig="$link_orig"
+        :error="$error"
+        :chap-id="$chap_id"
+        :chap-challenge="$chap_challenge"
+        :link-login-only="$link_login_only"
+        :link-orig-esc="$link_orig_esc"
+        :mac-esc="$mac_esc"
+    />
 
     @if($zona->venta_vouchers_activa)
         <!-- Phase 2 Stub (if Vouchers mode active on zone) -->

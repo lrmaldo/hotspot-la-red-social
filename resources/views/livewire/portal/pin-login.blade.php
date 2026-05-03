@@ -1,8 +1,14 @@
 <div class="px-6 py-6 border-t border-gray-100 mt-2">
     <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acceder a Internet</h2>
 
-       @if($this->zona->trial_enabled)
-        <div class="mt-4" x-data="{ 
+    @if($error)
+        <div class="mb-4 bg-red-50 p-3 rounded-md border border-red-200">
+            <p class="text-sm text-red-600 text-center font-medium">{{ $error }}</p>
+        </div>
+    @endif
+
+    @if($this->zona->trial_enabled)
+        <div class="mt-4 mb-4" x-data="{ 
             countdown: @entangle('countdown'),
             init() {
                 let timer = setInterval(() => {
@@ -61,9 +67,52 @@
         </button>
     </form>
 
- 
-
     <p class="mt-4 text-center text-xs text-gray-500">
         Al conectar, aceptas nuestra política de uso justo y los términos de servicio de la red.
     </p>
+
+    <!-- FORMULARIO OCULTO HACIA MIKROTIK -->
+    @if($readyToConnect)
+        <div x-data x-init="
+            // Cargamos dinámicamente el md5.js del MikroTik antes de enviar
+            let script = document.createElement('script');
+            script.src = 'http://{{ $zona->hotspot_host }}/md5.js';
+            script.onload = function() {
+                let form = document.getElementById('mikrotikLoginForm');
+                let chapId = document.getElementById('m_chap_id').value;
+                let chapChallenge = document.getElementById('m_chap_challenge').value;
+                
+                if (chapId && chapChallenge) {
+                    let pass = document.getElementById('unhashed_password').value;
+                    document.getElementById('m_password').value = hexMD5(chapId + pass + chapChallenge);
+                } else {
+                    document.getElementById('m_password').value = document.getElementById('unhashed_password').value;
+                }
+                
+                form.submit();
+            };
+            // Fallback si md5.js no carga
+            script.onerror = function() {
+                 document.getElementById('m_password').value = document.getElementById('unhashed_password').value;
+                 document.getElementById('mikrotikLoginForm').submit();
+            };
+            document.head.appendChild(script);
+        ">
+            <form id="mikrotikLoginForm" action="{{ $link_login_only ?? 'http://'.$zona->hotspot_host.'/login' }}" method="post" class="hidden">
+                <input type="hidden" name="username" value="{{ $mikrotikUsername }}" />
+                <input type="hidden" id="m_password" name="password" />
+                <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
+                <input type="hidden" name="popup" value="true" />
+                
+                <!-- Campos auxiliares para JavaScript -->
+                <input type="hidden" id="unhashed_password" value="{{ $mikrotikPassword }}" />
+                <input type="hidden" id="m_chap_id" value="{{ $chap_id }}" />
+                <input type="hidden" id="m_chap_challenge" value="{{ $chap_challenge }}" />
+            </form>
+            <div class="fixed inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center z-50">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="mt-4 font-semibold text-gray-700">Validando acceso...</p>
+            </div>
+        </div>
+    @endif
 </div>

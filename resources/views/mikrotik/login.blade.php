@@ -80,7 +80,7 @@
     <h2>Conectando a {{ $zona->nombre }}</h2>
     <p>Si no se redirecciona en unos segundos haga clic en continuar...</p>
 
-    <form name="redirect" action="{{ route('portal.login', $zona->id_personalizado) }}" method="get">
+    <form name="redirect" action="{{ route('portal.login', $zona->id_personalizado) }}" method="post">
         <input type="hidden" name="mac" value="$(mac)">
         <input type="hidden" name="ip" value="$(ip)">
         <input type="hidden" name="username" value="$(username)">

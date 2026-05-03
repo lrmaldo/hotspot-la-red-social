@@ -9,6 +9,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+use Livewire\Attributes\Url;
+
 #[Layout('layouts.portal')]
 class CarruselCampanas extends Component
 {
@@ -17,11 +19,37 @@ class CarruselCampanas extends Component
     public int $currentIndex = 0;
     public bool $finished = false;
 
-    public function mount(Zona $zona)
+    // Parámetros de MikroTik
+    #[Url] public ?string $mac = null;
+    #[Url] public ?string $ip = null;
+    #[Url] public ?string $username = null;
+    #[Url] public ?string $link_login = null;
+    #[Url] public ?string $link_orig = null;
+    #[Url] public ?string $error = null;
+    #[Url] public ?string $chap_id = null;
+    #[Url] public ?string $chap_challenge = null;
+    #[Url] public ?string $link_login_only = null;
+    #[Url] public ?string $link_orig_esc = null;
+    #[Url] public ?string $mac_esc = null;
+
+    public function mount(Zona $zona, \Illuminate\Http\Request $request)
     {
         if (!$zona->is_active) {
             abort(404);
         }
+
+        // Si se recibe por POST (o GET), capturamos los parámetros de MikroTik
+        $this->mac = $request->input('mac', $this->mac);
+        $this->ip = $request->input('ip', $this->ip);
+        $this->username = $request->input('username', $this->username);
+        $this->link_login = $request->input('link-login', $this->link_login);
+        $this->link_orig = $request->input('link-orig', $this->link_orig);
+        $this->error = $request->input('error', $this->error);
+        $this->chap_id = $request->input('chap-id', $this->chap_id);
+        $this->chap_challenge = $request->input('chap-challenge', $this->chap_challenge);
+        $this->link_login_only = $request->input('link-login-only', $this->link_login_only);
+        $this->link_orig_esc = $request->input('link-orig-esc', $this->link_orig_esc);
+        $this->mac_esc = $request->input('mac-esc', $this->mac_esc);
 
         $this->zona = $zona;
         $this->campanas = $this->zona->campanas()

@@ -12,7 +12,7 @@ Route::get('/zona-no-encontrada', function () {
 })->name('zona.not-found');
 
 // Portal Hotspot - Mikrotik Redirection
-Route::get('/portal/{zona:id_personalizado}', CarruselCampanas::class)
+Route::match(['get', 'post'], '/portal/{zona:id_personalizado}', CarruselCampanas::class)
     ->name('portal.login')
     ->missing(function () {
         return redirect()->route('zona.not-found');
