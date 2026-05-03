@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::prefix('admin')->group(function() {
         Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
+        Route::get('/zonas/{zona}/mikrotik', [\App\Http\Controllers\Admin\MikrotikDownloadController::class, 'download'])->name('admin.zonas.mikrotik');
         Route::get('/campanas', CampanasIndex::class)->name('admin.campanas');
         Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion');
     });
