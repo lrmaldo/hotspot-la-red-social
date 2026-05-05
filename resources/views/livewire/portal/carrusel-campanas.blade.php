@@ -4,8 +4,79 @@
         {{ $zona->nombre }} - Publicidad
     </div> --}}
 
-    @if(count($campanas) > 0)
-        <!-- AUTOMATIC CAROUSEL (ALPINE.JS) -->
+    @if($displayMode === 'video' && $activeVideo)
+        <!-- Opcion 1: MODO VIDEO (Reproductor Único) -->
+        <style> [x-cloak] { display: none !important; } </style>
+        <div x-data="{ 
+                muted: true, 
+                showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
+                skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
+                init() {
+                    this.$nextTick(() => {
+                        if (this.$refs.videoPlayer) {
+                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
+                        }
+                    });
+
+                    if (this.skipSeconds > 0) {
+                        let interval = setInterval(() => {
+                            this.skipSeconds--;
+                            if (this.skipSeconds <= 0) {
+                                this.showSkip = true;
+                                clearInterval(interval);
+                            }
+                        }, 1000);
+                    }
+                }
+             }" 
+             class="relative w-full aspect-video bg-black overflow-hidden object-contain shadow-inner">
+            
+            @php
+                $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
+            @endphp
+            <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted" class="w-full h-full object-cover" alt="{{ $activeVideo->titulo }}"></video>
+            
+            <!-- Botón Activar/Desactivar Audio -->
+            <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
+                    class="absolute bottom-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10 backdrop-blur-sm">
+                <svg x-show="muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                <svg x-cloak x-show="!muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+            </button>
+
+            <!-- Botón Omitir Video -->
+            @if($activeVideo->skip_after_seconds)
+                @php
+                    $skipTextParts = explode('{s}', $activeVideo->skip_texto);
+                @endphp
+                <button type="button"
+                        style="min-width: 110px;"
+                        :disabled="!showSkip"
+                        @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
+                        :class="showSkip ? 'bg-primary/90 hover:bg-primary cursor-pointer' : 'bg-black/70 cursor-not-allowed opacity-90'"
+                        class="absolute bottom-3 left-3 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition z-10 backdrop-blur-sm shadow-lg text-center flex items-center justify-center">
+                    
+                    <!-- Estado de cuenta regresiva -->
+                    <span x-show="!showSkip" class="flex items-center">
+                        <span>{{ trim($skipTextParts[0]) }}</span>
+                        <span x-text="skipSeconds" class="mx-1 text-primary"></span>
+                        <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
+                    </span>
+
+                    <!-- Estado habilitado -->
+                    <span x-cloak x-show="showSkip" class="flex items-center">
+                        Saltarse &rarr;
+                    </span>
+                </button>
+            @endif
+
+            <!-- Shadow inferior opcional para leer mejor otros elementos -->
+            <div class="absolute top-0 left-0 w-full p-2 bg-gradient-to-b from-black/60 to-transparent text-white text-sm font-semibold pointer-events-none text-center drop-shadow-md">
+                {{ $activeVideo->titulo }}
+            </div>
+        </div>
+
+    @elseif($displayMode === 'carrusel' && count($campanas) > 0)
+        <!-- Opcion 2: AUTOMATIC CAROUSEL DE IMAGENES (ALPINE.JS) -->
         <div x-data="{
                 activeSlide: 0,
                 slides: {{ count($campanas) }},
@@ -44,12 +115,7 @@
                      x-transition:leave-end="opacity-0"
                      class="w-full h-full">
                     
-                    @if($campana->tipo === 'video')
-                        <!-- Videos autoplay perfectly because they are handled internally by browser when displayed -->
-                        <video src="{{ $path }}" autoplay muted loop class="w-full h-full object-cover" alt="{{ $campana->titulo }}"></video>
-                    @else
-                        <img src="{{ $path }}" class="w-full h-full object-cover" alt="{{ $campana->titulo }}">
-                    @endif
+                    <img src="{{ $path }}" class="w-full h-full object-cover" alt="{{ $campana->titulo }}">
                     
                     <!-- Title Overlay -->
                     <div class="absolute top-0 left-0 w-full p-2 bg-gradient-to-b from-black/60 to-transparent text-white text-sm font-semibold pointer-events-none text-center drop-shadow-md">
@@ -78,20 +144,22 @@
     @endif
 
     <!-- FORMULARIO DE LOGGEO (SIEMPRE VISIBLE ABAJO) -->
-    <livewire:portal.pin-login 
-        :zona="$zona"
-        :mac="$mac"
-        :ip="$ip"
-        :username="$username"
-        :link-login="$link_login"
-        :link-orig="$link_orig"
-        :error="$error"
-        :chap-id="$chap_id"
-        :chap-challenge="$chap_challenge"
-        :link-login-only="$link_login_only"
-        :link-orig-esc="$link_orig_esc"
-        :mac-esc="$mac_esc"
-    />
+    <div id="login-section">
+        <livewire:portal.pin-login 
+            :zona="$zona"
+            :mac="$mac"
+            :ip="$ip"
+            :username="$username"
+            :link-login="$link_login"
+            :link-orig="$link_orig"
+            :error="$error"
+            :chap-id="$chap_id"
+            :chap-challenge="$chap_challenge"
+            :link-login-only="$link_login_only"
+            :link-orig-esc="$link_orig_esc"
+            :mac-esc="$mac_esc"
+        />
+    </div>
 
     @if($zona->venta_vouchers_activa)
         <!-- Phase 2 Stub (if Vouchers mode active on zone) -->

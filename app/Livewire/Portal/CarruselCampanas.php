@@ -19,6 +19,9 @@ class CarruselCampanas extends Component
     public int $currentIndex = 0;
     public bool $finished = false;
 
+    public string $displayMode = 'carrusel';
+    public ?\App\Models\Campana $activeVideo = null;
+
     // Parámetros de MikroTik
     #[Url] public ?string $mac = null;
     #[Url] public ?string $ip = null;
@@ -52,12 +55,29 @@ class CarruselCampanas extends Component
         $this->mac_esc = $request->input('mac-esc', $this->mac_esc);
 
         $this->zona = $zona;
-        $this->campanas = $this->zona->campanas()
-            ->where('is_active', true)
-            ->orderBy('prioridad', 'asc')
-            ->get();
+        
+        $allCampanas = $this->zona->campanas()->where('is_active', true)->get();
+        $videos = $allCampanas->where('tipo', 'video');
+        $imagenes = $allCampanas->where('tipo', 'imagen');
 
-        if ($this->campanas->isEmpty()) {
+        if ($videos->isNotEmpty() && $imagenes->isNotEmpty()) {
+            $this->displayMode = (rand(0, 1) === 1) ? 'video' : 'carrusel';
+        } elseif ($videos->isNotEmpty()) {
+            $this->displayMode = 'video';
+        } elseif ($imagenes->isNotEmpty()) {
+            $this->displayMode = 'carrusel';
+        } else {
+            $this->displayMode = 'none';
+        }
+
+        if ($this->displayMode === 'video') {
+            $this->activeVideo = $videos->random(); // Elige 1 solo video aleatorio
+            $this->campanas = collect(); // Vaciamos para no romper el array
+        } elseif ($this->displayMode === 'carrusel') {
+            $this->campanas = $imagenes->shuffle(); // Mezcla las imágenes aleatoriamente
+        }
+
+        if (empty($this->campanas) && !$this->activeVideo) {
             $this->finished = true;
         }
     }
