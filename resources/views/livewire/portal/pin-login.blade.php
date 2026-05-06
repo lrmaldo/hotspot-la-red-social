@@ -74,10 +74,9 @@
     <!-- FORMULARIO OCULTO HACIA MIKROTIK -->
     @if($readyToConnect)
         <div x-data x-init="
-            // Cargamos dinámicamente el md5.js del MikroTik antes de enviar
-            let script = document.createElement('script');
-            script.src = 'http://{{ $zona->hotspot_host }}/md5.js';
-            script.onload = function() {
+            let formScript = document.createElement('script');
+            formScript.src = 'http://{{ $zona->hotspot_host }}/md5.js';
+            formScript.onload = function() {
                 let form = document.getElementById('mikrotikLoginForm');
                 let chapId = document.getElementById('m_chap_id').value;
                 let chapChallenge = document.getElementById('m_chap_challenge').value;
@@ -91,12 +90,11 @@
                 
                 form.submit();
             };
-            // Fallback si md5.js no carga
-            script.onerror = function() {
+            formScript.onerror = function() {
                  document.getElementById('m_password').value = document.getElementById('unhashed_password').value;
                  document.getElementById('mikrotikLoginForm').submit();
             };
-            document.head.appendChild(script);
+            document.head.appendChild(formScript);
         ">
             <form id="mikrotikLoginForm" action="{{ $link_login_only ?? 'http://'.$zona->hotspot_host.'/login' }}" method="post" class="hidden">
                 <input type="hidden" name="username" value="{{ $mikrotikUsername }}" />
