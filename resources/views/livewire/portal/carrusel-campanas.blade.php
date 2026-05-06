@@ -155,9 +155,12 @@
         .media-container {
             position: relative;
             width: 100%;
-            aspect-video;
-            background-color: transparent;
+            aspect-ratio: 16 / 9;
+            background-color: #f3f4f6;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .media-title {
@@ -314,15 +317,45 @@
                 </div>
             @endif
 
-            <div class="portal-content" id="login-section">
+            @php
+                $globalSkipSeconds = 0;
+                if ($displayMode === 'video' && $activeVideo) {
+                    $globalSkipSeconds = $activeVideo->skip_after_seconds ?? 0;
+                } elseif ($displayMode === 'carrusel' && count($campanas) > 0) {
+                    $globalSkipSeconds = $campanas->first()->skip_after_seconds ?? 0;
+                }
+            @endphp
+
+            <div class="portal-content" id="login-section"
+                 x-data="{
+                    canAccess: {{ $globalSkipSeconds <= 0 ? 'true' : 'false' }},
+                    skipSeconds: {{ $globalSkipSeconds }},
+                    init() {
+                        if (this.skipSeconds > 0) {
+                            let interval = setInterval(() => {
+                                this.skipSeconds--;
+                                if (this.skipSeconds <= 0) {
+                                    this.canAccess = true;
+                                    clearInterval(interval);
+                                }
+                            }, 1000);
+                        }
+                    }
+                 }">
                 <div class="auth-title">Acceder a Internet</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
                     <form action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="get" class="mb-6">
                         <input type="hidden" name="dst" value="{{ $link_orig_esc ?? 'http://google.com' }}" />
                         <input type="hidden" name="username" value="T-{{ $mac_esc ?? '' }}" />
-                        <button type="submit" class="btn-primary">
-                            Conectarse a Internet Gratis
+                        <button type="submit" class="btn-primary"
+                                style="display: flex; justify-content: center; align-items: center;"
+                                :disabled="!canAccess"
+                                :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed;' : ''">
+                            <span x-show="canAccess">Conectarse a Internet Gratis</span>
+                            <span x-cloak x-show="!canAccess">
+                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
+                            </span>
                         </button>
                     </form>
                 @endif
