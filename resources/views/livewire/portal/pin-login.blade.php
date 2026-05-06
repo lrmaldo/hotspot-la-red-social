@@ -10,21 +10,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /* Variables CSS personalizables */
+        /* Variables CSS personalizables dinámicamente según la Zona */
         :root {
-            --color-background: #f9fafb;
-            --color-primary: #ff5e2c;
-            --color-primary-light: rgba(255, 94, 44, 0.1);
-            --color-secondary: #ff8159;
-            --color-secondary-light: rgba(255, 129, 89, 0.15);
-            --color-secondary-dark: #e64a1c;
+            --color-background: #f3f4f6;
+            --color-primary: {{ $zona->color_primario ?? '#2563eb' }}; /* Azul por defecto */
+            --color-secondary: {{ $zona->color_secundario ?? '#ff5e2c' }}; /* Naranja por defecto */
             --color-text: #1f2937;
             --color-text-light: #6b7280;
             --color-border: #e5e7eb;
-            --color-input-focus: #ffeee8;
-            --color-button-hover: #e64a1c;
+            --color-input-focus: {{ $zona->color_secundario ?? '#ff5e2c' }}33; /* 20% opacidad */
             --radius-md: 0.5rem;
-            --radius-lg: 0.75rem;
+            --radius-lg: 1rem;
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --animation-speed: 0.3s;
@@ -35,64 +31,94 @@
             background-color: var(--color-background);
             color: var(--color-text);
             line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .portal-wrapper {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .portal-container {
-            max-width: 500px;
-            margin: 20px auto;
+            background-color: white;
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-lg);
-            transition: transform var(--animation-speed) ease, box-shadow var(--animation-speed) ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .portal-header {
-            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+        .portal-main-header {
+            background-color: var(--color-primary);
             color: white;
             text-align: center;
-            padding: 15px;
-            font-size: 18px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .portal-main-header-subtitle {
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .portal-main-header-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .portal-zone-banner {
+            background-color: var(--color-secondary);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-size: 1.1rem;
             font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        /* Zigzag separator effect mimicking the screenshot */
+        .portal-zone-banner::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background-size: 10px 10px;
+            background-image: linear-gradient(135deg, var(--color-secondary) 25%, transparent 25%), 
+                              linear-gradient(225deg, var(--color-secondary) 25%, transparent 25%);
+            background-position: 0 0;
         }
 
         .portal-content {
-            padding: 2.5rem;
+            padding: 2.5rem 2rem;
             background-color: white;
-            position: relative;
-        }
-
-        .portal-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 12px;
-            background: linear-gradient(135deg, var(--color-secondary-light) 25%, transparent 25%) -10px 0,
-                        linear-gradient(225deg, var(--color-secondary-light) 25%, transparent 25%) -10px 0,
-                        linear-gradient(315deg, var(--color-secondary-light) 25%, transparent 25%),
-                        linear-gradient(45deg, var(--color-secondary-light) 25%, transparent 25%);
-            background-size: 20px 20px;
-            opacity: 0.5;
         }
 
         /* Estilos para formularios (Autenticación PIN) */
         .auth-form {
             margin-top: 1.5rem;
             padding: 1.5rem;
-            background-color: #f9fafb;
+            background-color: var(--color-background);
             border-radius: var(--radius-md);
             border: 1px solid var(--color-border);
         }
 
         .auth-form h3 {
-            color: var(--color-primary);
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-align: center;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .auth-form .form-field {
@@ -102,8 +128,8 @@
         .auth-form label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.875rem;
+            font-weight: 600;
+            font-size: 0.85rem;
             color: var(--color-text);
         }
 
@@ -112,34 +138,37 @@
             padding: 0.75rem 1rem;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
-            font-size: 1rem;
+            font-size: 1.25rem;
+            text-align: center;
+            letter-spacing: 0.2em;
             transition: border-color var(--animation-speed) ease, box-shadow var(--animation-speed) ease;
             background-color: white;
+            color: var(--color-text);
+            outline: none;
         }
 
         .auth-form input:focus {
-            outline: none;
-            border-color: var(--color-primary);
+            border-color: var(--color-secondary);
             box-shadow: 0 0 0 3px var(--color-input-focus);
         }
 
         .auth-form button {
             width: 100%;
-            padding: 0.75rem 1.25rem;
-            background-color: var(--color-primary);
+            padding: 0.85rem 1.25rem;
+            background-color: var(--color-secondary);
             color: white;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 600;
             text-align: center;
             cursor: pointer;
-            transition: background-color var(--animation-speed) ease;
-            font-size: 1.05rem;
-            margin-top: 0.5rem;
+            transition: background-color var(--animation-speed) ease, opacity var(--animation-speed) ease;
+            font-size: 1rem;
+            margin-top: 1rem;
         }
 
         .auth-form button:hover {
-            background-color: var(--color-button-hover);
+            opacity: 0.9;
         }
 
         .text-error {
@@ -161,7 +190,7 @@
         }
 
         .btn-trial {
-            background-color: #10b981;
+            background-color: var(--color-text-light);
             color: white;
             padding: 0.75rem 1.25rem;
             border: none;
@@ -169,17 +198,47 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: background-color var(--animation-speed) ease;
+            transition: opacity var(--animation-speed) ease;
         }
 
         .btn-trial:hover {
-            background-color: #059669;
+            opacity: 0.9;
+        }
+        
+        .facebook-btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        
+        .btn-facebook {
+            background-color: #1877f2;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            transition: opacity var(--animation-speed) ease;
+        }
+        
+        .btn-facebook:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-facebook svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            fill: currentColor;
         }
 
         @media (max-width: 640px) {
             .portal-container {
-                margin: 10px;
-                width: calc(100% - 20px);
+                border-radius: var(--radius-md);
             }
             .portal-content {
                 padding: 1.5rem;
@@ -190,59 +249,81 @@
 </head>
 <body>
 
-    <div class="portal-container">
-        <div class="portal-header">
-            {{ $zona->nombre ?? 'Portal Cautivo' }}
-        </div>
-
-        <div class="portal-content">
-            <h1 class="text-2xl font-bold mb-4 text-center">Accede a nuestra WiFi</h1>
-            <p class="text-gray-600 mb-6 text-center">
-                Ingresa tu PIN de acceso para navegar por internet.
-            </p>
-
-            <div class="auth-form" id="pin-form">
-                <form name="login" action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="post" onSubmit="return doLogin()">
-                    <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
-                    <input type="hidden" name="popup" value="true" />
-
-                    <div class="form-field">
-                        <label for="username">PIN de acceso</label>
-                        <input type="text" name="username" id="username" placeholder="••••" autofocus required
-                               class="tracking-widest font-bold text-center text-lg">
-                    </div>
-                    
-                    <input type="hidden" name="password" id="password" value="">
-
-                    <button type="submit" onclick="document.getElementById('password').value = document.getElementById('username').value;">
-                        Conectar con PIN
-                    </button>
-
-                    @if(!empty($error))
-                        <div class="text-error">
-                            {{ $error }}
-                        </div>
-                    @endif
-                </form>
+    <div class="portal-wrapper">
+        <div class="portal-container">
+            <div class="portal-main-header">
+                <div class="portal-main-header-subtitle">Bienvenido a {{ $zona->nombre ?? 'WiFi' }}</div>
+                <div class="portal-main-header-title">Bienvenido 1</div>
+                
+                <!-- Dots simulados (para diseño) -->
+                <div style="display: flex; gap: 6px; margin-top: 20px;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255,255,255,0.5);"></div>
+                    <div style="width: 16px; height: 8px; border-radius: 4px; background-color: var(--color-secondary);"></div>
+                </div>
             </div>
-            
-            @if(isset($zona) && $zona->trial_enabled)
-                <div class="trial-container">
-                    <p class="text-sm text-gray-500 mb-3">¿No tienes un PIN?</p>
-                    <form action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="get">
-                        <input type="hidden" name="dst" value="{{ $link_orig_esc ?? 'http://google.com' }}" />
-                        <input type="hidden" name="username" value="T-{{ $mac_esc ?? '' }}" />
-                        <button type="submit" class="btn-trial">
-                            Conectarse Gratis
+
+            <div class="portal-zone-banner">
+                {{ $zona->nombre ?? 'Sucursal Centro' }}
+            </div>
+
+            <div class="portal-content">
+                <h1 class="text-2xl font-bold mb-2 text-center">Accede a nuestra WiFi</h1>
+                <p class="text-gray-500 mb-6 text-center text-sm">
+                    Ingresa tu PIN de acceso para navegar por internet.
+                </p>
+
+                <div class="auth-form" id="pin-form">
+                    <form name="login" action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="post" onSubmit="return doLogin()">
+                        <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
+                        <input type="hidden" name="popup" value="true" />
+
+                        <div class="form-field">
+                            <label for="username">PIN de acceso</label>
+                            <input type="text" name="username" id="username" placeholder="· · · ·" autofocus required>
+                        </div>
+                        
+                        <input type="hidden" name="password" id="password" value="">
+
+                        <button type="submit" onclick="document.getElementById('password').value = document.getElementById('username').value;">
+                            Conectar con PIN
                         </button>
+
+                        @if(!empty($error))
+                            <div class="text-error">
+                                {{ $error }}
+                            </div>
+                        @endif
                     </form>
                 </div>
-            @endif
-            
-            <p class="mt-6 text-center text-xs text-gray-400">
-                Al conectar, aceptas nuestra política de uso justo y los términos de servicio de la red.
-            </p>
+                
+                @if(isset($zona) && $zona->trial_enabled)
+                    <div class="trial-container">
+                        <form action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="get">
+                            <input type="hidden" name="dst" value="{{ $link_orig_esc ?? 'http://google.com' }}" />
+                            <input type="hidden" name="username" value="T-{{ $mac_esc ?? '' }}" />
+                            <button type="submit" class="btn-trial">
+                                O Conectarse Gratis
+                            </button>
+                        </form>
+                    </div>
+                @endif
+                
+                <p class="mt-8 text-center text-xs text-gray-400">
+                    Al conectar, aceptas nuestra política de uso justo y los términos de servicio de la red.
+                </p>
+            </div>
         </div>
+        
+        @if(isset($zona) && $zona->facebook_url)
+        <div class="facebook-btn-container">
+            <a href="{{ $zona->facebook_url }}" target="_blank" class="btn-facebook">
+                <svg viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Visítanos en Facebook &rarr;
+            </a>
+        </div>
+        @endif
     </div>
 
     <!-- Script MD5 para autenticación CHAP de Mikrotik si se llegara a necesitar a futuro -->
