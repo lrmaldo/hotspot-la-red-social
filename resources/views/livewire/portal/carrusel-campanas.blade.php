@@ -329,19 +329,19 @@
             <div class="portal-content" id="login-section"
                  x-data="{
                     canAccess: {{ $globalSkipSeconds <= 0 ? 'true' : 'false' }},
-                    skipSeconds: {{ $globalSkipSeconds }},
-                    init() {
-                        if (this.skipSeconds > 0) {
-                            let interval = setInterval(() => {
-                                this.skipSeconds--;
-                                if (this.skipSeconds <= 0) {
-                                    this.canAccess = true;
-                                    clearInterval(interval);
-                                }
-                            }, 1000);
-                        }
+                    skipSeconds: {{ $globalSkipSeconds }}
+                 }"
+                 x-init="
+                    if (skipSeconds > 0) {
+                        let interval = setInterval(() => {
+                            skipSeconds--;
+                            if (skipSeconds <= 0) {
+                                canAccess = true;
+                                clearInterval(interval);
+                            }
+                        }, 1000);
                     }
-                 }">
+                 ">
                 <div class="auth-title">Acceder a Internet</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
