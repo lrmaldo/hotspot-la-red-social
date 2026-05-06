@@ -33,7 +33,8 @@
             color: var(--color-primary);
             width: 80px;
             height: 80px;
-            margin-bottom: 1.5rem;
+            margin: 0 auto 1.5rem auto;
+            display: block;
         }
 
         .portal-wrapper {
@@ -177,13 +178,17 @@
         [x-cloak] { display: none !important; }
     </style>
 
-    <!-- Logo WiFi Superior -->
-    <svg class="wifi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-        <line x1="12" y1="20" x2="12.01" y2="20"></line>
-    </svg>
+    <!-- Logo o WiFi Superior -->
+    @if(isset($zona) && !empty($zona->logo))
+        <img src="{{ str_starts_with($zona->logo, 'http') ? $zona->logo : \Illuminate\Support\Facades\Storage::url($zona->logo) }}" class="wifi-icon" style="object-fit: contain; width: auto; max-width: 200px;" alt="Logo {{ $zona->nombre }}">
+    @else
+        <svg class="wifi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+    @endif
 
     <div class="portal-wrapper">
         <div class="portal-container">
@@ -237,7 +242,7 @@
                                 style="min-width: 100px;"
                                 :disabled="!showSkip"
                                 @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
-                                class="absolute bottom-3 left-3 bg-white/20 text-white px-3 py-1.5 rounded text-xs font-semibold backdrop-blur-sm shadow transition z-10 flex items-center justify-center hover:bg-white/30">
+                                class="absolute bottom-3 left-3 bg-black/60 text-white px-3 py-1.5 rounded text-xs font-semibold backdrop-blur-sm shadow transition z-10 flex items-center justify-center hover:bg-black/80">
                             
                             <span x-show="!showSkip" class="flex items-center">
                                 <span>{{ trim($skipTextParts[0]) }}</span>
@@ -278,6 +283,7 @@
                             $path = str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path);
                         @endphp
                         <div x-show="activeSlide === {{ $index }}"
+                             x-cloak
                              x-transition:enter="transition ease-in-out duration-700"
                              x-transition:enter-start="opacity-0"
                              x-transition:enter-end="opacity-100"
@@ -336,7 +342,7 @@
                         
                         <input type="hidden" name="password" id="password" value="">
 
-                        <button type="submit" class="btn-primary" onclick="document.getElementById('password').value = document.getElementById('username').value;">
+                        <button type="submit" class="btn-primary" onclick="document.forms['login'].password.value = document.forms['login'].username.value;">
                             Canjear PIN
                         </button>
 
@@ -358,15 +364,36 @@
     </div>
 
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
-    <script src="{{ asset('js/md5.js') }}"></script>
-    <script>
-        function doLogin() {
-            var username = document.getElementById('username');
-            if (!username.value.trim()) {
-                alert('Por favor ingresa tu PIN');
+    @if(!empty($chap_id))
+        <form name="sendin" action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="post" style="display:none;">
+            <input type="hidden" name="username" />
+            <input type="hidden" name="password" />
+            <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
+            <input type="hidden" name="popup" value="true" />
+        </form>
+        <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>
+        <script type="text/javascript">
+            function doLogin() {
+                var loginForm = document.forms['login'];
+                if (!loginForm.username.value.trim()) {
+                    alert('Por favor ingresa tu PIN');
+                    return false;
+                }
+                document.sendin.username.value = loginForm.username.value;
+                document.sendin.password.value = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
+                document.sendin.submit();
                 return false;
             }
-            return true;
-        }
-    </script>
+        </script>
+    @else
+        <script>
+            function doLogin() {
+                if (!document.forms['login'].username.value.trim()) {
+                    alert('Por favor ingresa tu PIN');
+                    return false;
+                }
+                return true;
+            }
+        </script>
+    @endif
 </div>
