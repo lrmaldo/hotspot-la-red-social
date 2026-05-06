@@ -342,7 +342,7 @@
                         }, 1000);
                     }
                  ">
-                <div class="auth-title">Acceder a Internet</div>
+                <div class="auth-title">Acceder a Internet11111</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
                     <form action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="get" class="mb-6">
