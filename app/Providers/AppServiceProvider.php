@@ -25,9 +25,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
          // Si te topas con problemas de estilos en Mikrotik (HTTP/HTTPS mixto)
-    if($this->app->environment('production')) {
+   /*  if($this->app->environment('production')) {
         \Illuminate\Support\Facades\URL::forceScheme('http');
-    }
+    } */
     }
 
     /**
