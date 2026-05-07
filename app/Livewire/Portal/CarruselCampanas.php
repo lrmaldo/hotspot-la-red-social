@@ -40,7 +40,7 @@ class CarruselCampanas extends Component
         if (!$zona->is_active) {
             abort(404);
         }
-        dd($request->all());
+        #dd($request->all());
         // Si se recibe por POST (o GET), capturamos los parámetros de MikroTik
         $this->mac = $request->input('mac', $this->mac);
         $this->ip = $request->input('ip', $this->ip);
