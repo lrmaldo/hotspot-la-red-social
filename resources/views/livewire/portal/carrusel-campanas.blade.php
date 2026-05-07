@@ -318,11 +318,17 @@
             @endif
 
             @php
-                $globalSkipSeconds = 0;
-                if ($displayMode === 'video' && $activeVideo) {
-                    $globalSkipSeconds = $activeVideo->skip_after_seconds ?? 0;
-                } elseif ($displayMode === 'carrusel' && count($campanas) > 0) {
-                    $globalSkipSeconds = $campanas->first()->skip_after_seconds ?? 0;
+                // Determinar los segundos de cuenta regresiva
+                // Si la zona tiene un tiempo, lo usamos, de lo contrario heredamos el del video/carrusel.
+                $globalSkipSeconds = $zona->trial_duration_seconds ?? 0;
+                
+                // Excepción: si globalSkipSeconds es 0 y queremos que se base en la campana activa
+                if ($globalSkipSeconds <= 0) {
+                    if ($displayMode === 'video' && $activeVideo) {
+                        $globalSkipSeconds = $activeVideo->skip_after_seconds ?? 0;
+                    } elseif ($displayMode === 'carrusel' && count($campanas) > 0) {
+                        $globalSkipSeconds = $campanas->first()->skip_after_seconds ?? 0;
+                    }
                 }
             @endphp
 
@@ -380,8 +386,8 @@
                         </button>
 
                         @if(!empty($error))
-                            <div class="text-error">
-                                {{ $error }}
+                            <div class="text-error" style="color: #dc2626; font-size: 0.875rem; text-align: center; margin-top: 1rem; background: #fef2f2; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #fecaca;">
+                                <strong>Error:</strong> {{ $error }}
                             </div>
                         @endif
                     </form>
