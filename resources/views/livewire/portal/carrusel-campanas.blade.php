@@ -352,7 +352,7 @@
 
                 @if(isset($zona) && $zona->trial_enabled)
                     <div class="mb-6">
-                        <a :href="canAccess ? '{{ $link_login_only }}?dst={{ urlencode($link_orig_esc ?? '') }}&username=T-{{ urlencode($mac_esc ?? '') }}' : '#'"
+                        <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
                            class="btn-primary"
                            style="display: flex; justify-content: center; align-items: center; text-decoration: none;"
                            :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed;' : ''"
