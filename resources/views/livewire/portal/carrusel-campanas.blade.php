@@ -1,14 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <title>Portal Cautivo - {{ $zona->nombre ?? 'WiFi' }}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <!-- Tailwind CSS del sistema -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+<div>
     <style>
         :root {
             --color-background: #ffffff;
@@ -190,8 +180,6 @@
 
         [x-cloak] { display: none !important; }
     </style>
-</head>
-<body>
 
     <!-- Logo o WiFi Superior -->
     @if(isset($zona) && !empty($zona->logo))
@@ -442,5 +430,4 @@
         </script>
     @endif
 
-</body>
-</html>
+</div>
