@@ -80,6 +80,22 @@
     </footer>
 
     <style>
+        /* Estilos de emergencia para asegurar colores si Tailwind falla */
+        :root {
+            --indigo-600: #4f46e5;
+            --indigo-700: #4338ca;
+            --gray-50: #f9fafb;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+        }
+        .bg-gray-50 { background-color: var(--gray-50); }
+        .bg-indigo-600 { background-color: var(--indigo-600); }
+        .text-indigo-600 { color: var(--indigo-600); }
+        .text-gray-600 { color: var(--gray-600); }
+        .text-gray-900 { color: var(--gray-900); }
+        .border-gray-100 { border-color: #f3f4f6; }
+        .shadow-xl { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+        
         @keyframes fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -95,6 +111,8 @@
             opacity: 0;
             animation: slide-up 0.8s ease-out forwards;
         }
+        .hover\:scale-105:hover { transform: scale(1.05); }
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
     </style>
 </body>
 </html>
