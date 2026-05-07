@@ -351,8 +351,8 @@
                 <div class="auth-title">Acceder a Internet</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
-                    <form action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="get" class="mb-6">
-                        <input type="hidden" name="dst" value="{{ $link_orig_esc ?? 'http://google.com' }}" />
+                    <form action="{{ $link_login_only }}" method="post" class="mb-6">
+                        <input type="hidden" name="dst" value="{{ $link_orig_esc ?? '' }}" />
                         <input type="hidden" name="username" value="T-{{ $mac_esc ?? '' }}" />
                         <button type="submit" class="btn-primary"
                                 style="display: flex; justify-content: center; align-items: center;"
@@ -367,8 +367,8 @@
                 @endif
 
                 <div class="auth-form">
-                    <form name="login" action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="post" onSubmit="return doLogin()">
-                        <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
+                    <form name="login" action="{{ $link_login_only }}" method="post" onSubmit="return doLogin()">
+                        <input type="hidden" name="dst" value="{{ $link_orig ?? '' }}" />
                         <input type="hidden" name="popup" value="true" />
 
                         <div class="form-group">
@@ -404,10 +404,10 @@
 
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
-        <form name="sendin" action="{{ $link_login_only ?? ('http://'.($zona->hotspot_host ?? '').'/login') }}" method="post" style="display:none;">
+        <form name="sendin" action="{{ $link_login_only }}" method="post" style="display:none;">
             <input type="hidden" name="username" />
             <input type="hidden" name="password" />
-            <input type="hidden" name="dst" value="{{ $link_orig ?? 'http://google.com' }}" />
+            <input type="hidden" name="dst" value="{{ $link_orig ?? '' }}" />
             <input type="hidden" name="popup" value="true" />
         </form>
         <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>
