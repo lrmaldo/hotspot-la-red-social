@@ -23,17 +23,17 @@ class CarruselCampanas extends Component
     public ?\App\Models\Campana $activeVideo = null;
 
     // Parámetros de MikroTik
-    #[Url] public ?string $mac = null;
-    #[Url] public ?string $ip = null;
-    #[Url] public ?string $username = null;
-    #[Url] public ?string $link_login = null;
-    #[Url] public ?string $link_orig = null;
-    #[Url] public ?string $error = null;
-    #[Url] public ?string $chap_id = null;
-    #[Url] public ?string $chap_challenge = null;
-    #[Url] public ?string $link_login_only = null;
-    #[Url] public ?string $link_orig_esc = null;
-    #[Url] public ?string $mac_esc = null;
+    public ?string $mac = null;
+    public ?string $ip = null;
+    public ?string $username = null;
+    public ?string $link_login = null;
+    public ?string $link_orig = null;
+    public ?string $error = null;
+    public ?string $chap_id = null;
+    public ?string $chap_challenge = null;
+    public ?string $link_login_only = null;
+    public ?string $link_orig_esc = null;
+    public ?string $mac_esc = null;
 
     public function mount(Zona $zona, \Illuminate\Http\Request $request)
     {
