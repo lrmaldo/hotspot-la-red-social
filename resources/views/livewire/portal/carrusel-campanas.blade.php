@@ -351,19 +351,18 @@
                 <div class="auth-title">Acceder a Internet</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
-                    <form action="{{ $link_login_only }}" method="post" class="mb-6">
-                        <input type="hidden" name="dst" value="{{ $link_orig_esc ?? '' }}" />
-                        <input type="hidden" name="username" value="T-{{ $mac_esc ?? '' }}" />
-                        <button type="submit" class="btn-primary"
-                                style="display: flex; justify-content: center; align-items: center;"
-                                :disabled="!canAccess"
-                                :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed;' : ''">
+                    <div class="mb-6">
+                        <a :href="canAccess ? '{{ $link_login_only }}?dst={{ urlencode($link_orig_esc ?? '') }}&username=T-{{ urlencode($mac_esc ?? '') }}' : '#'"
+                           class="btn-primary"
+                           style="display: flex; justify-content: center; align-items: center; text-decoration: none;"
+                           :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed;' : ''"
+                           @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
                             <span x-show="canAccess">Conectarse a Internet Gratis</span>
                             <span x-cloak x-show="!canAccess">
                                 Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
                             </span>
-                        </button>
-                    </form>
+                        </a>
+                    </div>
                 @endif
 
                 <div class="auth-form">
@@ -381,7 +380,7 @@
                         
                         <input type="hidden" name="password" id="password" value="">
 
-                        <button type="submit" class="btn-primary" onclick="document.forms['login'].password.value = document.forms['login'].username.value;">
+                        <button type="submit" class="btn-primary" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
                             Canjear PIN
                         </button>
 
