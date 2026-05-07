@@ -15,6 +15,10 @@
             --animation-speed: 0.3s;
         }
 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
             background-color: var(--color-background);
@@ -53,6 +57,7 @@
             box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
+            width: 100%;
         }
 
         .portal-content {
@@ -186,30 +191,37 @@
         /* Media Queries para Responsive Design (Desktop y Tablets) */
         @media (min-width: 768px) {
             .portal-wrapper {
-                max-width: 850px;
+                max-width: 900px;
                 margin: 0 auto;
             }
             .portal-container {
                 display: flex;
                 flex-direction: row;
-                min-height: 450px;
+                min-height: 500px;
+                width: 100%;
             }
             .media-container {
-                flex: 1.2;
-                height: auto;
+                flex: 1.2 1 0%;
+                height: 100%;
                 aspect-ratio: auto;
-                min-height: 100%;
+                min-height: 500px;
+                position: relative;
             }
             .media-container video, .media-container img {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
                 height: 100%;
                 object-fit: cover;
+                object-position: center;
             }
             .portal-content {
-                flex: 1;
+                flex: 1 1 0%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                padding: 2.5rem;
+                padding: 2.5rem 3rem;
             }
         }
     </style>
@@ -260,7 +272,7 @@
                     @php
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
                     @endphp
-                    <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted" class="w-full h-full object-cover"></video>
+                    <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover; object-position: center;"></video>
                     
                     <!-- Botón Activar Audio -->
                     <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
@@ -320,16 +332,11 @@
                         @endphp
                         <div x-show="activeSlide === {{ $index }}"
                              x-cloak
-                             x-transition:enter="transition ease-in-out duration-700"
-                             x-transition:enter-start="opacity-0"
-                             x-transition:enter-end="opacity-100"
-                             x-transition:leave="transition ease-in-out duration-700 absolute inset-0"
-                             x-transition:leave-start="opacity-100"
-                             x-transition:leave-end="opacity-0"
-                             class="w-full h-full relative">
+                             x-transition.opacity.duration.700ms
+                             style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                             
                             <div class="media-title">{{ $campana->titulo ?? 'test' }}</div>
-                            <img src="{{ $path }}" class="w-full h-full object-cover">
+                            <img src="{{ $path }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: 0;">
                         </div>
                     @endforeach
 

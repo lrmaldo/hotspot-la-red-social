@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     {{-- agreg el js/md5.js--}}
-    <script src="{{ asset('js/md5.js') }}"></script>
+   {{--  <script src="{{ asset('js/md5.js') }}"></script> --}}
 </head>
 <body>
     {{ $slot }}
