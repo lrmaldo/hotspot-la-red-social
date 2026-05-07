@@ -1,4 +1,7 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import '../../vendor/livewire/flux/dist/flux.css';
 
 @source '../views';
@@ -44,6 +47,12 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+@layer utilities {
+    .will-change-transform {
+        will-change: transform, opacity;
     }
 }
 

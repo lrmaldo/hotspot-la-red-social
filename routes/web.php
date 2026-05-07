@@ -19,7 +19,7 @@ Route::match(['get', 'post'], '/portal/{zona:id_personalizado}', CarruselCampana
     });
 
 Route::get('/', function () {
-    return redirect()->route('zona.not-found');
+    return view('welcome');
 })->name('home');
 
 // Rutas de Administración
