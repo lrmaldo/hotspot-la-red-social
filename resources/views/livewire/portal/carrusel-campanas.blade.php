@@ -43,6 +43,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            margin: 0 auto;
         }
 
         .portal-container {
@@ -50,6 +51,8 @@
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
         }
 
         .portal-content {
@@ -179,6 +182,36 @@
         }
 
         [x-cloak] { display: none !important; }
+
+        /* Media Queries para Responsive Design (Desktop y Tablets) */
+        @media (min-width: 768px) {
+            .portal-wrapper {
+                max-width: 850px;
+                margin: 0 auto;
+            }
+            .portal-container {
+                display: flex;
+                flex-direction: row;
+                min-height: 450px;
+            }
+            .media-container {
+                flex: 1.2;
+                height: auto;
+                aspect-ratio: auto;
+                min-height: 100%;
+            }
+            .media-container video, .media-container img {
+                height: 100%;
+                object-fit: cover;
+            }
+            .portal-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 2.5rem;
+            }
+        }
     </style>
 
     <!-- Logo o WiFi Superior -->
