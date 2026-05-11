@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <style>
         :root {
             --color-background: #ffffff;
@@ -206,7 +206,7 @@
         .media-container {
             position: relative;
             width: 100%;
-            min-height: 300px; /* Evita que desaparezca en móviles al tener contenido absoluto */
+            min-height: 300px; /* Evita que desaparezca en mÃ³viles al tener contenido absoluto */
             background-color: #0f172a;
             overflow: hidden;
             display: flex;
@@ -235,11 +235,11 @@
             justify-content: center;
         }
 
-        /* Estilos generales (Móvil y Escritorio) para que no se estiren y se adapten siempre */
+        /* Estilos generales (MÃ³vil y Escritorio) para que no se estiren y se adapten siempre */
         .media-content video, .media-content img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Esta es la clave para que nada se estire, siempre mantiene su proporción */
+            object-fit: contain; /* Esta es la clave para que nada se estire, siempre mantiene su proporciÃ³n */
             object-position: center;
         }
 
@@ -371,8 +371,8 @@
         </svg>
     @endif
 
-    <div class="portal-wrapper">
-        <div class="portal-container" x-data="{ showAd: false }">
+    <div class="portal-wrapper" x-data="{ showAd: false }">
+        <div class="portal-container">
 
             <div class="media-container" style="position: relative;">
                 
@@ -434,60 +434,14 @@
                             @endif
                         </div>
                     @else
-                        <!-- Si no hay carrusel, muestra un encabezado con el título por defecto -->
+                        <!-- Si no hay carrusel, muestra un encabezado con el tÃ­tulo por defecto -->
                         <div class="w-full h-full bg-gray-100 flex items-center justify-center" style="width: 100%; height: 100%; display: flex; align-items:center; justify-content:center;">
                             <div class="media-title text-gray-800" style="position:relative; top:auto; left:auto; background: none; text-shadow: none; font-size: 1.5rem;">{{ $zona->nombre ?? 'Bienvenidos' }}</div>
                         </div>
                     @endif
                 </div>
 
-                <!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO (MODAL FULLSCREEN) -->
-                @if($activeVideo)
-                <div x-show="showAd" x-cloak 
-                     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
-                     x-data="{ 
-                        muted: true, 
-                        showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
-                        skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
-                        init() {
-                            this.$watch('showAd', value => {
-                                if (value) {
-                                    this.$nextTick(() => {
-                                        if (this.$refs.videoPlayer) {
-                                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
-                                        }
-                                    });
-
-                                    if (this.skipSeconds > 0) {
-                                        let interval = setInterval(() => {
-                                            this.skipSeconds--;
-                                            if (this.skipSeconds <= 0) {
-                                                this.showSkip = true;
-                                                clearInterval(interval);
-                                            }
-                                        }, 1000);
-                                    }
-                                } else {
-                                    if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
-                                    // Resetear si quisiéramos, pero mantenemos simple
-                                }
-                            });
-                        }
-                    }">
-                    
-                    <!-- Botón Cerrar Modal -->
-                    <button type="button" @click="showAd = false; $dispatch('cancel-ad')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; font-size: 1rem; transition: all 0.3s ease;">
-                        ✕
-                    </button>
-
-                    @php
-                        $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
-                    @endphp
-
-                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                        @if($activeVideo->titulo)
-                            <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
-                        @endif
+                
                         <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
                         
                         <div class="video-controls" style="bottom: 20px; padding: 0 40px;">
@@ -576,7 +530,7 @@
                         
                         <input type="hidden" name="password" id="password" value="">
 
-                        <!-- Botón primario ahora es para canjear el PIN -->
+                        <!-- BotÃ³n primario ahora es para canjear el PIN -->
                         <button type="submit" class="btn-trial" style="margin-bottom: 0px;" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
                             Canjear PIN
                         </button>
@@ -595,7 +549,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <!-- El botón secundario (borde transparente) es ahora para la publicidad/internet gratis -->
+                        <!-- El botÃ³n secundario (borde transparente) es ahora para la publicidad/internet gratis -->
                         <div x-show="!adStarted">
                             <button type="button" class="btn-pin" @click="startWatching()" style="text-decoration: none;">
                                 Ver Publicidad (Internet Gratis)
@@ -622,13 +576,13 @@
                     <div style="margin-top: 1.5rem; text-align: center;">
                         <a href="{{ $zona->facebook_url }}" target="_blank" style="color: #1877f2; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem;">
                             <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            Visítanos en nuestra Fanpage
+                            VisÃ­tanos en nuestra Fanpage
                         </a>
                     </div>
                 @endif
 
                 <p class="footer-text">
-                    Al conectar, aceptas nuestra política de uso justo y los términos de servicio de la red.
+                    Al conectar, aceptas nuestra polÃ­tica de uso justo y los tÃ©rminos de servicio de la red.
                 </p>
             </div>
             
@@ -636,7 +590,56 @@
         
     </div>
 
-    <!-- Script MD5 para autenticación CHAP de Mikrotik -->
+    
+<!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO (MODAL FULLSCREEN) -->
+                @if($activeVideo)
+                <div x-show="showAd" x-cloak 
+                     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+                     x-data="{ 
+                        muted: true, 
+                        showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
+                        skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
+                        init() {
+                            this.$watch('showAd', value => {
+                                if (value) {
+                                    this.$nextTick(() => {
+                                        if (this.$refs.videoPlayer) {
+                                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
+                                        }
+                                    });
+
+                                    if (this.skipSeconds > 0) {
+                                        let interval = setInterval(() => {
+                                            this.skipSeconds--;
+                                            if (this.skipSeconds <= 0) {
+                                                this.showSkip = true;
+                                                clearInterval(interval);
+                                            }
+                                        }, 1000);
+                                    }
+                                } else {
+                                    if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
+                                    // Resetear si quisiÃ©ramos, pero mantenemos simple
+                                }
+                            });
+                        }
+                    }">
+                    
+                    <!-- BotÃ³n Cerrar Modal -->
+                    <button type="button" @click="showAd = false; $dispatch('cancel-ad')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; font-size: 1rem; transition: all 0.3s ease;">
+                        âœ•
+                    </button>
+
+                    @php
+                        $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
+                    @endphp
+
+                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        @if($activeVideo->titulo)
+                            <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
+                        @endif
+
+<!-- Script MD5 para autenticaciÃ³n CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <form name="sendin" action="{{ $link_login_only }}" method="post" style="display:none;">
             <input type="hidden" name="username" />
