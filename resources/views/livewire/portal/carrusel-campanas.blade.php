@@ -374,9 +374,76 @@
     <div class="portal-wrapper">
         <div class="portal-container" x-data="{ showAd: false }">
 
-            @if($displayMode === 'video' && $activeVideo)
-                <!-- Reproductor de Video -->
-                <div x-show="showAd" x-cloak
+            <div class="media-container" style="position: relative;">
+                
+                <!-- ESTADO POR DEFECTO: CARRUSEL DE BANNERS -->
+                <div x-show="!showAd" class="w-full h-full" style="position: absolute; top:0; left:0; width:100%; height:100%;">
+                    @if(count($campanas) > 0)
+                        <div x-data="{
+                                activeSlide: 0,
+                                slides: {{ count($campanas) }},
+                                timer: null,
+                                init() {
+                                    if (this.slides > 1) {
+                                        this.startTimer();
+                                    }
+                                    
+                                    this.$watch('showAd', value => {
+                                        if (value) clearInterval(this.timer);
+                                        else if (this.slides > 1) this.startTimer();
+                                    });
+                                },
+                                startTimer() {
+                                    this.timer = setInterval(() => { this.activeSlide = (this.activeSlide + 1) % this.slides }, 6000);
+                                },
+                                resetTimer() {
+                                    clearInterval(this.timer);
+                                    this.startTimer();
+                                }
+                            }" 
+                            class="w-full h-full relative" style="width: 100%; height: 100%;">
+                            
+                            @foreach($campanas as $index => $campana)
+                                @php
+                                    $path = str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path);
+                                @endphp
+                                
+                                <div x-show="activeSlide === {{ $index }}"
+                                     x-transition.opacity.duration.700ms
+                                     style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
+                                    
+                                    <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
+
+                                    <div class="media-content">
+                                        @if($campana->titulo)
+                                            <div class="media-title">{{ $campana->titulo }}</div>
+                                        @endif
+                                        <img src="{{ $path }}">
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            @if(count($campanas) > 1)
+                            <div style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10;">
+                                @foreach($campanas as $index => $campana)
+                                    <button @click="activeSlide = {{ $index }}; resetTimer();" 
+                                            :style="activeSlide === {{ $index }} ? 'background-color: white; width: 24px;' : 'background-color: rgba(255,255,255,0.5); width: 8px;'" 
+                                            class="carousel-dot"></button>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
+                    @else
+                        <!-- Si no hay carrusel, muestra un encabezado con el título por defecto -->
+                        <div class="w-full h-full bg-gray-100 flex items-center justify-center" style="width: 100%; height: 100%; display: flex; align-items:center; justify-content:center;">
+                            <div class="media-title text-gray-800" style="position:relative; top:auto; left:auto; background: none; text-shadow: none; font-size: 1.5rem;">{{ $zona->nombre ?? 'Bienvenidos' }}</div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO -->
+                @if($activeVideo)
+                <div x-show="showAd" x-cloak class="w-full h-full" style="position: absolute; top:0; left:0; width:100%; height:100%;"
                      x-data="{ 
                         muted: true, 
                         showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
@@ -399,27 +466,26 @@
                                             }
                                         }, 1000);
                                     }
+                                } else {
+                                    if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
                                 }
                             });
                         }
-                    }" 
-                    class="media-container"
-                    style="display: none;">
+                    }">
                     
                     @php
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
                     @endphp
 
-                    <!-- Fondo difuminado -->
                     <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
 
                     <div class="media-content">
-                        <div class="media-title">{{ $activeVideo->titulo ?? 'test' }}</div>
-                        <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted"></video>
+                        @if($activeVideo->titulo)
+                            <div class="media-title">{{ $activeVideo->titulo }}</div>
+                        @endif
+                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain;"></video>
                         
-                        <!-- Controles del Video -->
                         <div class="video-controls">
-                            <!-- Botón Omitir -->
                             @if($activeVideo->skip_after_seconds)
                                 @php
                                     $skipTextParts = explode('{s}', $activeVideo->skip_texto);
@@ -430,20 +496,19 @@
                                         class="btn-video-control">
                                     
                                     <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
-                                        <span>{{ trim($skipTextParts[0]) }}</span>
+                                        <span>{{ trim($skipTextParts[0] ?? 'Internet en') }}</span>
                                         <span x-text="skipSeconds" style="margin: 0 6px; font-size: 1rem;"></span>
                                         <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
                                     </span>
 
                                     <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
-                                        Saltarse <svg class="btn-video-icon" style="margin-left:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        Ya puedes conectarte
                                     </span>
                                 </button>
                             @else
                                 <div></div>
                             @endif
 
-                            <!-- Botón Activar Audio -->
                             <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
                                     class="btn-video-control btn-video-mute">
                                 <svg x-show="muted" class="btn-video-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
@@ -452,80 +517,17 @@
                         </div>
                     </div>
                 </div>
-
-            @elseif($displayMode === 'carrusel' && count($campanas) > 0)
-                <!-- Carrusel de Imágenes -->
-                <div x-show="showAd" x-cloak
-                     x-data="{
-                        activeSlide: 0,
-                        slides: {{ count($campanas) }},
-                        timer: null,
-                        init() {
-                            this.$watch('showAd', value => {
-                                if (value && this.slides > 1) {
-                                    this.startTimer();
-                                }
-                            });
-                        },
-                        startTimer() {
-                            this.timer = setInterval(() => { this.activeSlide = (this.activeSlide + 1) % this.slides }, 6000);
-                        },
-                        resetTimer() {
-                            clearInterval(this.timer);
-                            this.startTimer();
-                        }
-                    }" 
-                    class="media-container"
-                    style="display: none;">
-                    
-                    @foreach($campanas as $index => $campana)
-                        @php
-                            $path = str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path);
-                        @endphp
-                        
-                        <!-- Contenedor del Slide actual -->
-                        <div x-show="activeSlide === {{ $index }}"
-                             x-cloak
-                             x-transition.opacity.duration.700ms
-                             style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
-                            
-                            <!-- Fondo difuminado dinámico por slide -->
-                            <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
-
-                            <div class="media-content">
-                                <div class="media-title">{{ $campana->titulo ?? 'test' }}</div>
-                                <img src="{{ $path }}">
-                            </div>
-                        </div>
-                    @endforeach
-
-                    @if(count($campanas) > 1)
-                    <div style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10;">
-                        @foreach($campanas as $index => $campana)
-                            <button @click="activeSlide = {{ $index }}; resetTimer();" 
-                                    :style="activeSlide === {{ $index }} ? 'background-color: white; width: 24px;' : 'background-color: rgba(255,255,255,0.5); width: 8px;'" 
-                                    class="carousel-dot"></button>
-                        @endforeach
-                    </div>
-                    @endif
-                </div>
-            @else
-                <!-- Si no hay video ni carrusel, muestra un encabezado con el título por defecto -->
-                <div x-show="showAd" x-cloak class="media-container bg-gray-100 flex items-center justify-center" style="display: none;">
-                    <div class="media-title text-gray-800" style="background: none; text-shadow: none;">{{ $zona->nombre ?? 'test' }}</div>
-                </div>
-            @endif
+                @endif
+            </div>
 
             @php
-                // Determinar los segundos de cuenta regresiva
-                // Si la zona tiene un tiempo, lo usamos, de lo contrario heredamos el del video/carrusel.
+                // Determinar los segundos de cuenta regresiva para el anuncio
                 $globalSkipSeconds = $zona->trial_duration_seconds ?? 0;
                 
-                // Excepción: si globalSkipSeconds es 0 y queremos que se base en la campana activa
                 if ($globalSkipSeconds <= 0) {
-                    if ($displayMode === 'video' && $activeVideo) {
+                    if ($activeVideo) {
                         $globalSkipSeconds = $activeVideo->skip_after_seconds ?? 0;
-                    } elseif ($displayMode === 'carrusel' && count($campanas) > 0) {
+                    } elseif (count($campanas) > 0) {
                         $globalSkipSeconds = $campanas->first()->skip_after_seconds ?? 0;
                     }
                 }

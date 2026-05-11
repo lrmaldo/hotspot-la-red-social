@@ -60,26 +60,14 @@ class CarruselCampanas extends Component
         $videos = $allCampanas->where('tipo', 'video');
         $imagenes = $allCampanas->where('tipo', 'imagen');
 
-        if ($videos->isNotEmpty() && $imagenes->isNotEmpty()) {
-            $this->displayMode = (rand(0, 1) === 1) ? 'video' : 'carrusel';
-        } elseif ($videos->isNotEmpty()) {
-            $this->displayMode = 'video';
-        } elseif ($imagenes->isNotEmpty()) {
-            $this->displayMode = 'carrusel';
-        } else {
-            $this->displayMode = 'none';
-        }
+        // Por defecto preparamos ambos
+        $this->activeVideo = $videos->isNotEmpty() ? $videos->random() : null;
+        $this->campanas = $imagenes->isNotEmpty() ? $imagenes->shuffle() : collect();
 
-        if ($this->displayMode === 'video') {
-            $this->activeVideo = $videos->random(); // Elige 1 solo video aleatorio
-            $this->campanas = collect(); // Vaciamos para no romper el array
-        } elseif ($this->displayMode === 'carrusel') {
-            $this->campanas = $imagenes->shuffle(); // Mezcla las imágenes aleatoriamente
-        }
-
-        if (empty($this->campanas) && !$this->activeVideo) {
-            $this->finished = true;
-        }
+        // El blade ahora puede tener ambos. 
+        // Si hay video, la lógica de "Internet Gratis" se basará en él.
+        // Mientras tanto, se muestra el carrusel de imágenes (banners por defecto).
+        $this->displayMode = 'mixto';
     }
 
     #[Title('Bienvenido al Portal')]
