@@ -35,15 +35,16 @@
 
         .wifi-icon {
             color: var(--color-primary);
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             margin: 0 auto 1.5rem auto;
             display: block;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
         }
 
         .portal-wrapper {
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -54,83 +55,115 @@
             background-color: white;
             border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             display: flex;
             flex-direction: column;
             width: 100%;
         }
 
         .portal-content {
-            padding: 1.5rem 2rem 2.5rem 2rem;
+            padding: 3rem 2.5rem;
             background-color: white;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .auth-title {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.5rem;
+            font-weight: 800;
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             color: var(--color-text);
+            letter-spacing: -0.025em;
         }
 
-        .btn-primary {
+        .btn-trial {
             width: 100%;
-            padding: 0.85rem 1.25rem;
+            padding: 1rem 1.25rem;
             background-color: var(--color-primary);
             color: white;
             border: none;
             border-radius: var(--radius-md);
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--animation-speed) ease;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px var(--color-input-focus);
+        }
+
+        .btn-trial:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px var(--color-input-focus);
+        }
+
+        .btn-pin {
+            width: 100%;
+            padding: 0.9rem 1.25rem;
+            background-color: transparent;
+            color: var(--color-text);
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-md);
             font-weight: 600;
             text-align: center;
             cursor: pointer;
-            transition: opacity var(--animation-speed) ease;
+            transition: all var(--animation-speed) ease;
             font-size: 1rem;
             display: block;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
+        .btn-pin:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background-color: #f9fafb;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 2rem 0;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .divider span {
+            padding: 0 1rem;
         }
 
         .auth-form {
-            margin-top: 1.5rem;
+            margin-top: 0;
         }
 
         .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .auth-form label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--color-text);
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-wrapper svg {
-            position: absolute;
-            left: 1rem;
-            color: #9ca3af;
-            width: 20px;
-            height: 20px;
+            margin-bottom: 1.25rem;
         }
 
         .auth-form input {
             width: 100%;
-            padding: 0.75rem 1rem 0.75rem 2.75rem;
-            border: 1px solid var(--color-border);
+            padding: 1rem;
+            border: 2px solid var(--color-border);
             border-radius: var(--radius-md);
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.1em;
             transition: all var(--animation-speed) ease;
-            background-color: white;
+            background-color: #f9fafb;
             color: var(--color-text);
             outline: none;
             box-sizing: border-box;
@@ -138,7 +171,8 @@
 
         .auth-form input:focus {
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px var(--color-input-focus);
+            background-color: white;
+            box-shadow: 0 0 0 4px var(--color-input-focus);
         }
 
         .text-error {
@@ -147,25 +181,46 @@
             text-align: center;
             margin-top: 1rem;
             background: #fef2f2;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border-radius: 0.375rem;
             border: 1px solid #fecaca;
+            font-weight: 500;
         }
         
         .footer-text {
-            margin-top: 1.5rem;
+            margin-top: 2rem;
             text-align: center;
             font-size: 0.75rem;
             color: #9ca3af;
-            line-height: 1.4;
+            line-height: 1.5;
         }
         
         .media-container {
             position: relative;
             width: 100%;
-            aspect-ratio: 16 / 9;
-            background-color: #f3f4f6;
+            background-color: #f8fafc;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Contenedor difuminado de fondo para rellenar los espacios en contain */
+        .media-blur-background {
+            position: absolute;
+            top: -10%; left: -10%; right: -10%; bottom: -10%;
+            width: 120%; height: 120%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.7);
+            z-index: 1;
+        }
+
+        .media-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -173,55 +228,55 @@
 
         .media-title {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
+            top: 20px;
+            left: 20px;
             color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 10px;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 8px 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
             z-index: 10;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+            background: rgba(0,0,0,0.4);
+            border-radius: 9999px;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.025em;
         }
 
         [x-cloak] { display: none !important; }
 
-        /* Media Queries para Responsive Design (Desktop y Tablets) */
+        /* Media Queries para Responsive Design (Desktop) */
         @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+                background-color: #f1f5f9;
+            }
             .portal-wrapper {
-                max-width: 900px;
-                margin: 0 auto;
+                max-width: 1100px;
             }
             .portal-container {
-                display: flex;
                 flex-direction: row;
-                min-height: 500px;
-                width: 100%;
+                min-height: 600px;
             }
             .media-container {
-                flex: 1.2 1 0%;
-                height: 100%;
-                aspect-ratio: auto;
-                min-height: 500px;
-                position: relative;
+                flex: 1.5;
             }
-            .media-container video, .media-container img {
-                position: absolute;
-                top: 0;
-                left: 0;
+            .media-content video, .media-content img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 object-position: center;
+                box-shadow: 0 0 20px rgba(0,0,0,0.3);
             }
             .portal-content {
-                flex: 1 1 0%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                padding: 2.5rem 3rem;
+                flex: 1;
+                min-width: 380px;
+                max-width: 480px;
+                padding: 4rem 3rem;
+            }
+            .wifi-icon {
+                margin: 0 auto 2rem auto;
+                width: 60px;
+                height: 60px;
             }
         }
     </style>
@@ -267,42 +322,51 @@
                     }" 
                     class="media-container">
                     
-                    <div class="media-title">{{ $activeVideo->titulo ?? 'test' }}</div>
-
                     @php
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
                     @endphp
-                    <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted" style="position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover; object-position: center;"></video>
-                    
-                    <!-- Botón Activar Audio -->
-                    <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
-                            class="absolute bottom-3 right-3 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition z-10 backdrop-blur-sm">
-                        <svg x-show="muted" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
-                        <svg x-cloak x-show="!muted" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-                    </button>
 
-                    <!-- Botón Omitir -->
-                    @if($activeVideo->skip_after_seconds)
-                        @php
-                            $skipTextParts = explode('{s}', $activeVideo->skip_texto);
-                        @endphp
-                        <button type="button"
-                                style="min-width: 100px;"
-                                :disabled="!showSkip"
-                                @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
-                                class="absolute bottom-3 left-3 bg-black/60 text-white px-3 py-1.5 rounded text-xs font-semibold backdrop-blur-sm shadow transition z-10 flex items-center justify-center hover:bg-black/80">
-                            
-                            <span x-show="!showSkip" class="flex items-center">
-                                <span>{{ trim($skipTextParts[0]) }}</span>
-                                <span x-text="skipSeconds" class="mx-1 font-bold"></span>
-                                <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
-                            </span>
+                    <!-- Fondo difuminado -->
+                    <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
 
-                            <span x-cloak x-show="showSkip">
-                                Saltarse &rarr;
-                            </span>
-                        </button>
-                    @endif
+                    <div class="media-content">
+                        <div class="media-title">{{ $activeVideo->titulo ?? 'test' }}</div>
+                        <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted"></video>
+                        
+                        <!-- Controles del Video -->
+                        <div class="absolute bottom-5 left-0 right-0 w-full px-5 flex justify-between items-end z-20 pointer-events-none">
+                            <!-- Botón Omitir -->
+                            @if($activeVideo->skip_after_seconds)
+                                @php
+                                    $skipTextParts = explode('{s}', $activeVideo->skip_texto);
+                                @endphp
+                                <button type="button"
+                                        :disabled="!showSkip"
+                                        @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
+                                        class="bg-black/60 text-white px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-md shadow-lg transition-all pointer-events-auto flex items-center justify-center hover:bg-black/80 hover:scale-105 border border-white/20">
+                                    
+                                    <span x-show="!showSkip" class="flex items-center">
+                                        <span>{{ trim($skipTextParts[0]) }}</span>
+                                        <span x-text="skipSeconds" class="mx-1.5 text-base"></span>
+                                        <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
+                                    </span>
+
+                                    <span x-cloak x-show="showSkip" class="flex items-center">
+                                        Saltarse <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                            @else
+                                <div></div>
+                            @endif
+
+                            <!-- Botón Activar Audio -->
+                            <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
+                                    class="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all pointer-events-auto backdrop-blur-md shadow-lg border border-white/20 hover:scale-110">
+                                <svg x-show="muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                                <svg x-cloak x-show="!muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
             @elseif($displayMode === 'carrusel' && count($campanas) > 0)
@@ -330,22 +394,29 @@
                         @php
                             $path = str_starts_with($campana->file_path, 'http') ? $campana->file_path : \Illuminate\Support\Facades\Storage::url($campana->file_path);
                         @endphp
+                        
+                        <!-- Contenedor del Slide actual -->
                         <div x-show="activeSlide === {{ $index }}"
                              x-cloak
                              x-transition.opacity.duration.700ms
-                             style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                             style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
                             
-                            <div class="media-title">{{ $campana->titulo ?? 'test' }}</div>
-                            <img src="{{ $path }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: 0;">
+                            <!-- Fondo difuminado dinámico por slide -->
+                            <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
+
+                            <div class="media-content">
+                                <div class="media-title">{{ $campana->titulo ?? 'test' }}</div>
+                                <img src="{{ $path }}">
+                            </div>
                         </div>
                     @endforeach
 
                     @if(count($campanas) > 1)
-                    <div class="absolute bottom-3 left-0 w-full flex justify-center space-x-2 z-10">
+                    <div class="absolute bottom-5 left-0 w-full flex justify-center space-x-2 z-10">
                         @foreach($campanas as $index => $campana)
                             <button @click="activeSlide = {{ $index }}; resetTimer();" 
-                                    :style="activeSlide === {{ $index }} ? 'background-color: white; width: 16px;' : 'background-color: rgba(255,255,255,0.5); width: 8px;'" 
-                                    class="h-2 rounded-full transition-all duration-300"></button>
+                                    :style="activeSlide === {{ $index }} ? 'background-color: white; width: 24px;' : 'background-color: rgba(255,255,255,0.5); width: 8px;'" 
+                                    class="h-2 rounded-full transition-all duration-300 shadow"></button>
                         @endforeach
                     </div>
                     @endif
@@ -391,17 +462,24 @@
                 <div class="auth-title">Acceder a Internet</div>
 
                 @if(isset($zona) && $zona->trial_enabled)
-                    <div class="mb-6">
+                    <div class="mb-4">
                         <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
-                           class="btn-primary"
-                           style="display: flex; justify-content: center; align-items: center; text-decoration: none;"
-                           :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed;' : ''"
+                           class="btn-trial"
+                           style="text-decoration: none; outline: none; border: none; box-shadow: 0 4px 6px -1px var(--color-input-focus);"
+                           :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none;' : ''"
                            @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
-                            <span x-show="canAccess">Conectarse a Internet Gratis</span>
+                            <span x-show="canAccess" class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Conectarse Gratis
+                            </span>
                             <span x-cloak x-show="!canAccess">
                                 Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
                             </span>
                         </a>
+                    </div>
+                
+                    <div class="divider">
+                        <span>O ingresa tu PIN</span>
                     </div>
                 @endif
 
@@ -411,21 +489,19 @@
                         <input type="hidden" name="popup" value="true" />
 
                         <div class="form-group">
-                            <label for="username">Introduce tu PIN de acceso</label>
                             <div class="input-wrapper">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                 <input type="text" name="username" id="username" placeholder="1234567" autofocus required>
                             </div>
                         </div>
                         
                         <input type="hidden" name="password" id="password" value="">
 
-                        <button type="submit" class="btn-primary" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
+                        <button type="submit" class="btn-pin" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
                             Canjear PIN
                         </button>
 
                         @if(!empty($error))
-                            <div class="text-error" style="color: #dc2626; font-size: 0.875rem; text-align: center; margin-top: 1rem; background: #fef2f2; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #fecaca;">
+                            <div class="text-error">
                                 <strong>Error:</strong> {{ $error }}
                             </div>
                         @endif
