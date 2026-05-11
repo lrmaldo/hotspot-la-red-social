@@ -495,11 +495,10 @@
                                 @php
                                     $skipTextParts = explode('{s}', $activeVideo->skip_texto);
                                 @endphp
-                                <button type="button"
-                                        :disabled="!showSkip"
-                                        @click="showAd = false; document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
-                                        class="btn-video-control"
-                                        :style="showSkip ? 'background-color: var(--color-primary); color: white; border-color: var(--color-primary); font-size: 1.1rem; padding: 12px 24px;' : ''">
+                                <a :href="showSkip ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
+                                   @click="if(!showSkip) { $event.preventDefault(); } else { $el.style.pointerEvents='none'; $el.style.opacity='0.6'; }"
+                                   class="btn-video-control"
+                                   :style="showSkip ? 'background-color: var(--color-primary); color: white; border-color: var(--color-primary); font-size: 1.1rem; padding: 12px 24px; text-decoration: none;' : 'text-decoration: none; cursor: default;'">
                                     
                                     <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
                                         <span>{{ trim($skipTextParts[0] ?? 'Internet en') }}</span>
@@ -508,9 +507,9 @@
                                     </span>
 
                                     <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
-                                        Saltar al portal y Conectarse
+                                        Conectarse a Internet Gratis
                                     </span>
-                                </button>
+                                </a>
                             @else
                                 <div></div>
                             @endif
