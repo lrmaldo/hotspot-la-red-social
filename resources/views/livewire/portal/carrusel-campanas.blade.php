@@ -331,18 +331,24 @@
             }
             .portal-wrapper {
                 max-width: 1100px;
+                width: 100%;
             }
             .portal-container {
                 flex-direction: row;
                 min-height: 600px;
+                width: 100%;
             }
             .media-container {
-                flex: 1.5;
+                flex: 0 0 55%;
+                width: 55%;
+                min-width: 55%;
+                max-width: 55%;
             }
             .portal-content {
-                flex: 1;
-                min-width: 380px;
-                max-width: 480px;
+                flex: 0 0 45%;
+                width: 45%;
+                min-width: 45%;
+                max-width: 45%;
                 padding: 4rem 3rem;
             }
             .wifi-icon {
