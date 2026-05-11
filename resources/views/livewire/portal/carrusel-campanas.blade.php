@@ -441,9 +441,10 @@
                     @endif
                 </div>
 
-                <!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO -->
+                <!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO (MODAL FULLSCREEN) -->
                 @if($activeVideo)
-                <div x-show="showAd" x-cloak class="w-full h-full" style="position: absolute; top:0; left:0; width:100%; height:100%;"
+                <div x-show="showAd" x-cloak 
+                     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
                      x-data="{ 
                         muted: true, 
                         showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
@@ -468,41 +469,46 @@
                                     }
                                 } else {
                                     if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
+                                    // Resetear si quisiéramos, pero mantenemos simple
                                 }
                             });
                         }
                     }">
                     
+                    <!-- Botón Cerrar Modal -->
+                    <button type="button" @click="showAd = false; $dispatch('cancel-ad')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; font-size: 1rem; transition: all 0.3s ease;">
+                        ✕
+                    </button>
+
                     @php
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
                     @endphp
 
-                    <div class="media-blur-background" style="background-image: url('{{ $path }}');"></div>
-
-                    <div class="media-content">
+                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                         @if($activeVideo->titulo)
-                            <div class="media-title">{{ $activeVideo->titulo }}</div>
+                            <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
                         @endif
-                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain;"></video>
+                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
                         
-                        <div class="video-controls">
+                        <div class="video-controls" style="bottom: 20px; padding: 0 40px;">
                             @if($activeVideo->skip_after_seconds)
                                 @php
                                     $skipTextParts = explode('{s}', $activeVideo->skip_texto);
                                 @endphp
                                 <button type="button"
                                         :disabled="!showSkip"
-                                        @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
-                                        class="btn-video-control">
+                                        @click="showAd = false; document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
+                                        class="btn-video-control"
+                                        :style="showSkip ? 'background-color: var(--color-primary); color: white; border-color: var(--color-primary); font-size: 1.1rem; padding: 12px 24px;' : ''">
                                     
                                     <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
                                         <span>{{ trim($skipTextParts[0] ?? 'Internet en') }}</span>
-                                        <span x-text="skipSeconds" style="margin: 0 6px; font-size: 1rem;"></span>
+                                        <span x-text="skipSeconds" style="margin: 0 6px; font-size: 1.1rem;"></span>
                                         <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
                                     </span>
 
                                     <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
-                                        Ya puedes conectarte
+                                        Saltar al portal y Conectarse
                                     </span>
                                 </button>
                             @else
@@ -510,7 +516,7 @@
                             @endif
 
                             <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
-                                    class="btn-video-control btn-video-mute">
+                                    class="btn-video-control btn-video-mute" style="background: rgba(255,255,255,0.2);">
                                 <svg x-show="muted" class="btn-video-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
                                 <svg x-cloak x-show="!muted" class="btn-video-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
                             </button>
@@ -534,20 +540,21 @@
             @endphp
 
             <div class="portal-content" id="login-section"
-                 :style="showAd ? 'padding-top: 2rem;' : ''"
+                 @cancel-ad.window="adStarted = false; skipSeconds = {{ $globalSkipSeconds }}; canAccess = false; clearInterval(intervalTimer);"
                  x-data="{
                     canAccess: {{ $globalSkipSeconds <= 0 ? 'true' : 'false' }},
                     skipSeconds: {{ $globalSkipSeconds }},
                     adStarted: false,
+                    intervalTimer: null,
                     startWatching() {
                         this.adStarted = true;
                         showAd = true;
                         if (this.skipSeconds > 0) {
-                            let interval = setInterval(() => {
+                            this.intervalTimer = setInterval(() => {
                                 this.skipSeconds--;
                                 if (this.skipSeconds <= 0) {
                                     this.canAccess = true;
-                                    clearInterval(interval);
+                                    clearInterval(this.intervalTimer);
                                 }
                             }, 1000);
                         } else {
