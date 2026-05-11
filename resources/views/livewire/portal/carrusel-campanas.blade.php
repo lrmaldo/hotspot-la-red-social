@@ -83,7 +83,7 @@
             width: 100%;
             padding: 1rem 1.25rem;
             background-color: var(--color-primary);
-            color: white;
+            color: white !important;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 700;
@@ -95,11 +95,19 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 6px -1px var(--color-input-focus);
+            text-decoration: none !important;
+            outline: none !important;
         }
 
-        .btn-trial:hover {
+        .btn-trial:hover, .btn-trial:focus, .btn-trial:active {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px var(--color-input-focus);
+            text-decoration: none !important;
+            color: white !important;
+        }
+
+        .btn-trial span, .btn-trial strong {
+            text-decoration: none !important;
         }
 
         .btn-pin {
@@ -529,15 +537,13 @@
                     <div class="mb-4">
                         <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
                            class="btn-trial"
-                           style="text-decoration: none !important; outline: none; border: none; box-shadow: 0 4px 6px -1px var(--color-input-focus);"
                            :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none;' : ''"
                            @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
-                            <span x-show="canAccess" class="flex items-center" style="text-decoration: none !important;">
-                                
-                                <span style="text-decoration: none !important;">Conectarse Gratis</span>
+                            <span x-show="canAccess" class="flex items-center">
+                                <span>Conectarse Gratis</span>
                             </span>
-                            <span x-cloak x-show="!canAccess" style="text-decoration: none !important;">
-                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold; text-decoration: none !important;"></span>s
+                            <span x-cloak x-show="!canAccess">
+                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
                             </span>
                         </a>
                     </div>
