@@ -372,33 +372,39 @@
     @endif
 
     <div class="portal-wrapper">
-        <div class="portal-container">
+        <div class="portal-container" x-data="{ showAd: false }">
 
             @if($displayMode === 'video' && $activeVideo)
                 <!-- Reproductor de Video -->
-                <div x-data="{ 
+                <div x-show="showAd" x-cloak
+                     x-data="{ 
                         muted: true, 
                         showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
                         skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
                         init() {
-                            this.$nextTick(() => {
-                                if (this.$refs.videoPlayer) {
-                                    this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
+                            this.$watch('showAd', value => {
+                                if (value) {
+                                    this.$nextTick(() => {
+                                        if (this.$refs.videoPlayer) {
+                                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
+                                        }
+                                    });
+
+                                    if (this.skipSeconds > 0) {
+                                        let interval = setInterval(() => {
+                                            this.skipSeconds--;
+                                            if (this.skipSeconds <= 0) {
+                                                this.showSkip = true;
+                                                clearInterval(interval);
+                                            }
+                                        }, 1000);
+                                    }
                                 }
                             });
-
-                            if (this.skipSeconds > 0) {
-                                let interval = setInterval(() => {
-                                    this.skipSeconds--;
-                                    if (this.skipSeconds <= 0) {
-                                        this.showSkip = true;
-                                        clearInterval(interval);
-                                    }
-                                }, 1000);
-                            }
                         }
                     }" 
-                    class="media-container">
+                    class="media-container"
+                    style="display: none;">
                     
                     @php
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
@@ -449,14 +455,17 @@
 
             @elseif($displayMode === 'carrusel' && count($campanas) > 0)
                 <!-- Carrusel de Imágenes -->
-                <div x-data="{
+                <div x-show="showAd" x-cloak
+                     x-data="{
                         activeSlide: 0,
                         slides: {{ count($campanas) }},
                         timer: null,
                         init() {
-                            if (this.slides > 1) {
-                                this.startTimer();
-                            }
+                            this.$watch('showAd', value => {
+                                if (value && this.slides > 1) {
+                                    this.startTimer();
+                                }
+                            });
                         },
                         startTimer() {
                             this.timer = setInterval(() => { this.activeSlide = (this.activeSlide + 1) % this.slides }, 6000);
@@ -466,7 +475,8 @@
                             this.startTimer();
                         }
                     }" 
-                    class="media-container">
+                    class="media-container"
+                    style="display: none;">
                     
                     @foreach($campanas as $index => $campana)
                         @php
@@ -501,7 +511,7 @@
                 </div>
             @else
                 <!-- Si no hay video ni carrusel, muestra un encabezado con el título por defecto -->
-                <div class="media-container bg-gray-100 flex items-center justify-center">
+                <div x-show="showAd" x-cloak class="media-container bg-gray-100 flex items-center justify-center" style="display: none;">
                     <div class="media-title text-gray-800" style="background: none; text-shadow: none;">{{ $zona->nombre ?? 'test' }}</div>
                 </div>
             @endif
@@ -522,42 +532,28 @@
             @endphp
 
             <div class="portal-content" id="login-section"
+                 :style="showAd ? 'padding-top: 2rem;' : ''"
                  x-data="{
                     canAccess: {{ $globalSkipSeconds <= 0 ? 'true' : 'false' }},
-                    skipSeconds: {{ $globalSkipSeconds }}
-                 }"
-                 x-init="
-                    if (skipSeconds > 0) {
-                        let interval = setInterval(() => {
-                            skipSeconds--;
-                            if (skipSeconds <= 0) {
-                                canAccess = true;
-                                clearInterval(interval);
-                            }
-                        }, 1000);
+                    skipSeconds: {{ $globalSkipSeconds }},
+                    adStarted: false,
+                    startWatching() {
+                        this.adStarted = true;
+                        showAd = true;
+                        if (this.skipSeconds > 0) {
+                            let interval = setInterval(() => {
+                                this.skipSeconds--;
+                                if (this.skipSeconds <= 0) {
+                                    this.canAccess = true;
+                                    clearInterval(interval);
+                                }
+                            }, 1000);
+                        } else {
+                            this.canAccess = true;
+                        }
                     }
-                 ">
+                 }">
                 <div class="auth-title">Acceder a Internet</div>
-
-                @if(isset($zona) && $zona->trial_enabled)
-                    <div class="mb-4">
-                        <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
-                           class="btn-trial"
-                           :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none;' : ''"
-                           @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
-                            <span x-show="canAccess" class="flex items-center">
-                                <span>Conectarse Gratis</span>
-                            </span>
-                            <span x-cloak x-show="!canAccess">
-                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
-                            </span>
-                        </a>
-                    </div>
-                
-                    <div class="divider">
-                        <span>O ingresa tu PIN</span>
-                    </div>
-                @endif
 
                 <div class="auth-form">
                     <form name="login" action="{{ $link_login_only }}" method="post" onSubmit="return doLogin()">
@@ -566,13 +562,14 @@
 
                         <div class="form-group">
                             <div class="input-wrapper">
-                                <input type="text" name="username" id="username" placeholder="1234567" autofocus required>
+                                <input type="text" name="username" id="username" placeholder="Ingresa tu PIN (Ej: 1234567)" autofocus required style="font-size: 1rem;">
                             </div>
                         </div>
                         
                         <input type="hidden" name="password" id="password" value="">
 
-                        <button type="submit" class="btn-pin" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
+                        <!-- Botón primario ahora es para canjear el PIN -->
+                        <button type="submit" class="btn-trial" style="margin-bottom: 0px;" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
                             Canjear PIN
                         </button>
 
@@ -583,6 +580,35 @@
                         @endif
                     </form>
                 </div>
+
+                @if(isset($zona) && $zona->trial_enabled)
+                    <div class="divider">
+                        <span>O ve publicidad para obtener</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <!-- El botón secundario (borde transparente) es ahora para la publicidad/internet gratis -->
+                        <div x-show="!adStarted">
+                            <button type="button" class="btn-pin" @click="startWatching()" style="text-decoration: none;">
+                                Ver Publicidad (Internet Gratis)
+                            </button>
+                        </div>
+
+                        <div x-show="adStarted" x-cloak>
+                            <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
+                               class="btn-pin"
+                               :style="!canAccess ? 'border-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; text-decoration: none;' : 'text-decoration: none;'"
+                               @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
+                                <span x-show="canAccess" class="flex items-center justify-center text-center">
+                                    <span>Conectarse Gratis Ahora</span>
+                                </span>
+                                <span x-cloak x-show="!canAccess" class="flex items-center justify-center text-center" style="font-size: 0.95rem;">
+                                    Internet Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
                 
                 @if(isset($zona) && !empty($zona->facebook_url))
                     <div style="margin-top: 1.5rem; text-align: center;">
