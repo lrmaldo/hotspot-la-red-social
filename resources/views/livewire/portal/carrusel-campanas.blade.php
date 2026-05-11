@@ -198,7 +198,8 @@
         .media-container {
             position: relative;
             width: 100%;
-            background-color: #f8fafc;
+            min-height: 300px; /* Evita que desaparezca en móviles al tener contenido absoluto */
+            background-color: #0f172a;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -212,7 +213,7 @@
             width: 120%; height: 120%;
             background-size: cover;
             background-position: center;
-            filter: blur(20px) brightness(0.7);
+            filter: blur(25px) brightness(0.4);
             z-index: 1;
         }
 
@@ -224,6 +225,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        /* Estilos generales (Móvil y Escritorio) para que no se estiren y se adapten siempre */
+        .media-content video, .media-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Esta es la clave para que nada se estire, siempre mantiene su proporción */
+            object-position: center;
         }
 
         .media-title {
@@ -240,6 +249,68 @@
             border-radius: 9999px;
             backdrop-filter: blur(4px);
             letter-spacing: 0.025em;
+        }
+
+        /* Controles de Video */
+        .video-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .btn-video-control {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-video-control:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        .btn-video-mute {
+            padding: 12px;
+            border-radius: 50%;
+        }
+
+        .btn-video-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Controles de Carrusel (Puntos) */
+        .carousel-dot {
+            height: 8px;
+            border-radius: 9999px;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            cursor: pointer;
+            margin: 0 4px;
+            padding: 0;
+            outline: none;
         }
 
         [x-cloak] { display: none !important; }
@@ -259,13 +330,6 @@
             }
             .media-container {
                 flex: 1.5;
-            }
-            .media-content video, .media-content img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-                object-position: center;
-                box-shadow: 0 0 20px rgba(0,0,0,0.3);
             }
             .portal-content {
                 flex: 1;
@@ -334,7 +398,7 @@
                         <video x-ref="videoPlayer" src="{{ $path }}" autoplay muted loop playsinline :muted="muted"></video>
                         
                         <!-- Controles del Video -->
-                        <div class="absolute bottom-5 left-0 right-0 w-full px-5 flex justify-between items-end z-20 pointer-events-none">
+                        <div class="video-controls">
                             <!-- Botón Omitir -->
                             @if($activeVideo->skip_after_seconds)
                                 @php
@@ -343,16 +407,16 @@
                                 <button type="button"
                                         :disabled="!showSkip"
                                         @click="document.getElementById('login-section').scrollIntoView({behavior: 'smooth'})"
-                                        class="bg-black/60 text-white px-4 py-2 rounded-lg text-sm font-bold backdrop-blur-md shadow-lg transition-all pointer-events-auto flex items-center justify-center hover:bg-black/80 hover:scale-105 border border-white/20">
+                                        class="btn-video-control">
                                     
-                                    <span x-show="!showSkip" class="flex items-center">
+                                    <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
                                         <span>{{ trim($skipTextParts[0]) }}</span>
-                                        <span x-text="skipSeconds" class="mx-1.5 text-base"></span>
+                                        <span x-text="skipSeconds" style="margin: 0 6px; font-size: 1rem;"></span>
                                         <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
                                     </span>
 
-                                    <span x-cloak x-show="showSkip" class="flex items-center">
-                                        Saltarse <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
+                                        Saltarse <svg class="btn-video-icon" style="margin-left:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                     </span>
                                 </button>
                             @else
@@ -361,9 +425,9 @@
 
                             <!-- Botón Activar Audio -->
                             <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
-                                    class="bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all pointer-events-auto backdrop-blur-md shadow-lg border border-white/20 hover:scale-110">
-                                <svg x-show="muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
-                                <svg x-cloak x-show="!muted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                    class="btn-video-control btn-video-mute">
+                                <svg x-show="muted" class="btn-video-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                                <svg x-cloak x-show="!muted" class="btn-video-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
                             </button>
                         </div>
                     </div>
@@ -412,11 +476,11 @@
                     @endforeach
 
                     @if(count($campanas) > 1)
-                    <div class="absolute bottom-5 left-0 w-full flex justify-center space-x-2 z-10">
+                    <div style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10;">
                         @foreach($campanas as $index => $campana)
                             <button @click="activeSlide = {{ $index }}; resetTimer();" 
                                     :style="activeSlide === {{ $index }} ? 'background-color: white; width: 24px;' : 'background-color: rgba(255,255,255,0.5); width: 8px;'" 
-                                    class="h-2 rounded-full transition-all duration-300 shadow"></button>
+                                    class="carousel-dot"></button>
                         @endforeach
                     </div>
                     @endif
@@ -465,15 +529,15 @@
                     <div class="mb-4">
                         <a :href="canAccess ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
                            class="btn-trial"
-                           style="text-decoration: none; outline: none; border: none; box-shadow: 0 4px 6px -1px var(--color-input-focus);"
+                           style="text-decoration: none !important; outline: none; border: none; box-shadow: 0 4px 6px -1px var(--color-input-focus);"
                            :style="!canAccess ? 'opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none;' : ''"
                            @click="if(!canAccess) { $event.preventDefault(); } else { $el.style.opacity='0.5'; $el.style.pointerEvents='none'; }">
-                            <span x-show="canAccess" class="flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                Conectarse Gratis
+                            <span x-show="canAccess" class="flex items-center" style="text-decoration: none !important;">
+                                
+                                <span style="text-decoration: none !important;">Conectarse Gratis</span>
                             </span>
-                            <span x-cloak x-show="!canAccess">
-                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold;"></span>s
+                            <span x-cloak x-show="!canAccess" style="text-decoration: none !important;">
+                                Conectarse Gratis en <span x-text="skipSeconds" style="margin-left: 4px; font-weight: bold; text-decoration: none !important;"></span>s
                             </span>
                         </a>
                     </div>
