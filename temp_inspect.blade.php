@@ -441,53 +441,7 @@
                     @endif
                 </div>
 
-                <!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO (MODAL FULLSCREEN) -->
-                @if($activeVideo)
-                <div x-show="showAd" x-cloak 
-                     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
-                     x-data="{ 
-                        muted: true, 
-                        showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
-                        skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
-                        init() {
-                            this.$watch('showAd', value => {
-                                if (value) {
-                                    this.$nextTick(() => {
-                                        if (this.$refs.videoPlayer) {
-                                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
-                                        }
-                                    });
-
-                                    if (this.skipSeconds > 0) {
-                                        let interval = setInterval(() => {
-                                            this.skipSeconds--;
-                                            if (this.skipSeconds <= 0) {
-                                                this.showSkip = true;
-                                                clearInterval(interval);
-                                            }
-                                        }, 1000);
-                                    }
-                                } else {
-                                    if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
-                                }
-                            });
-                        }
-                    }">
-                    
-                    <!-- Botón Cerrar Modal -->
-                    <button type="button" @click="showAd = false; $dispatch('cancel-ad')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; font-size: 1rem; transition: all 0.3s ease;">
-                        ✕
-                    </button>
-
-                    @php
-                        $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
-                    @endphp
-
-                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                        @if($activeVideo->titulo)
-                            <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
-                        @endif
-                        
+                
                         <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
                         
                         <div class="video-controls" style="bottom: 20px; padding: 0 40px;">
@@ -636,7 +590,56 @@
         
     </div>
 
-    <!-- Script MD5 para autenticación CHAP de Mikrotik -->
+    
+<!-- ESTADO ACTIVO: REPRODUCTOR DE VIDEO PUBLICITARIO (MODAL FULLSCREEN) -->
+                @if($activeVideo)
+                <div x-show="showAd" x-cloak 
+                     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+                     x-data="{ 
+                        muted: true, 
+                        showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
+                        skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
+                        init() {
+                            this.$watch('showAd', value => {
+                                if (value) {
+                                    this.$nextTick(() => {
+                                        if (this.$refs.videoPlayer) {
+                                            this.$refs.videoPlayer.play().catch(e => console.warn('Autoplay bloqueado', e));
+                                        }
+                                    });
+
+                                    if (this.skipSeconds > 0) {
+                                        let interval = setInterval(() => {
+                                            this.skipSeconds--;
+                                            if (this.skipSeconds <= 0) {
+                                                this.showSkip = true;
+                                                clearInterval(interval);
+                                            }
+                                        }, 1000);
+                                    }
+                                } else {
+                                    if (this.$refs.videoPlayer) this.$refs.videoPlayer.pause();
+                                    // Resetear si quisiÃ©ramos, pero mantenemos simple
+                                }
+                            });
+                        }
+                    }">
+                    
+                    <!-- BotÃ³n Cerrar Modal -->
+                    <button type="button" @click="showAd = false; $dispatch('cancel-ad')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; font-size: 1rem; transition: all 0.3s ease;">
+                        âœ•
+                    </button>
+
+                    @php
+                        $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
+                    @endphp
+
+                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        @if($activeVideo->titulo)
+                            <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
+                        @endif
+
+<!-- Script MD5 para autenticaciÃ³n CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <form name="sendin" action="{{ $link_login_only }}" method="post" style="display:none;">
             <input type="hidden" name="username" />
@@ -671,3 +674,4 @@
     @endif
 
 </div>
+
