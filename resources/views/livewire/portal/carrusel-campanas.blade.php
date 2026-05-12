@@ -485,7 +485,7 @@
                         $path = str_starts_with($activeVideo->file_path, 'http') ? $activeVideo->file_path : \Illuminate\Support\Facades\Storage::url($activeVideo->file_path);
                     @endphp
 
-                    <div style="position: relative; width: 100%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                    <div style="position: relative; width: 90%; max-width: 900px; height: 85vh; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto;">
                         @if($activeVideo->titulo)
                             <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
                         @endif
