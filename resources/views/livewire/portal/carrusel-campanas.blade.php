@@ -263,13 +263,15 @@
         .video-controls {
             position: absolute;
             bottom: 20px;
-            left: 0;
-            right: 0;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            max-width: 90%;
             padding: 0 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
             z-index: 20;
             pointer-events: none;
         }
@@ -490,7 +492,7 @@
                         
                         <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
                         
-                        <div class="video-controls" style="bottom: 20px; padding: 0 40px;">
+                        <div class="video-controls">
                             @if($activeVideo->skip_after_seconds)
                                 @php
                                     $skipTextParts = explode('{s}', $activeVideo->skip_texto);
