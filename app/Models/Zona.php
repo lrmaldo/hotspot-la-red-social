@@ -14,6 +14,8 @@ class Zona extends Model
         'id_personalizado',
         'descripcion',
         'hotspot_host',
+        'mikrotik_user',
+        'mikrotik_password',
         'tipo_autenticacion',
         'venta_vouchers_activa',
         'trial_enabled',
@@ -29,6 +31,7 @@ class Zona extends Model
     {
         return [
             'venta_vouchers_activa' => 'boolean',
+            'mikrotik_password' => 'encrypted',
             'trial_enabled' => 'boolean',
             'trial_duration_seconds' => 'integer',
             'is_active' => 'boolean',
@@ -41,5 +44,21 @@ class Zona extends Model
     public function campanas(): HasMany
     {
         return $this->hasMany(Campana::class);
+    }
+
+    /**
+     * @return HasMany<Plan, $this>
+     */
+    public function planes(): HasMany
+    {
+        return $this->hasMany(Plan::class);
+    }
+
+    /**
+     * @return HasMany<Voucher, $this>
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class);
     }
 }
