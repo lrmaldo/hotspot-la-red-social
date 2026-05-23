@@ -1,10 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Admin\Zonas\Index as ZonasIndex;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
+use App\Livewire\Admin\Planes\Index as PlanesIndex;
+use App\Livewire\Admin\Vouchers\Index as VouchersIndex;
+use App\Livewire\Admin\Zonas\Index as ZonasIndex;
 use App\Livewire\Portal\CarruselCampanas;
+use App\Livewire\Portal\CompraPlan;
+use App\Livewire\Portal\PagoExitoso;
 use App\Livewire\Portal\PinLogin;
 
 Route::get('/zona-no-encontrada', function () {
@@ -17,6 +21,21 @@ Route::match(['get', 'post'], '/portal/{zona:id_personalizado}', CarruselCampana
     ->missing(function () {
         return redirect()->route('zona.not-found');
     });
+
+// Portal Phase 2 — Voucher purchase
+Route::get('/portal/{zona:id_personalizado}/comprar', CompraPlan::class)
+    ->name('portal.comprar');
+
+Route::get('/portal/{zona:id_personalizado}/pago-exitoso', PagoExitoso::class)
+    ->name('portal.pago-exitoso');
+
+// Alias for portal.zona (used in emails/views)
+Route::get('/portal/{zona:id_personalizado}/zona', CarruselCampanas::class)
+    ->name('portal.zona');
+
+// Stripe Webhook
+Route::post('/webhook/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handle'])
+    ->name('webhook.stripe');
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,6 +50,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
         Route::get('/zonas/{zona}/mikrotik', [\App\Http\Controllers\Admin\MikrotikDownloadController::class, 'download'])->name('admin.zonas.mikrotik');
         Route::get('/campanas', CampanasIndex::class)->name('admin.campanas');
+        Route::get('/planes', PlanesIndex::class)->name('admin.planes');
+        Route::get('/vouchers', VouchersIndex::class)->name('admin.vouchers');
         Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion');
     });
 });

@@ -228,6 +228,44 @@
 
                             </div>
 
+                            <!-- Configuración MikroTik API (visible cuando venta vouchers activa) -->
+                            <div class="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-md border border-green-200" x-show="$wire.venta_vouchers_activa" x-transition>
+                                <h4 class="text-sm font-bold text-green-900 mb-3">Credenciales API MikroTik</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-green-800">Usuario API</label>
+                                        <input type="text" wire:model="mikrotik_user" placeholder="api_portal" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
+                                        @error('mikrotik_user') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-green-800">Contraseña API</label>
+                                        <input type="password" wire:model="mikrotik_password" placeholder="{{ $zonaId ? 'Dejar vacío para no cambiar' : 'Contraseña' }}" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
+                                        @error('mikrotik_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                @if($zonaId)
+                                    <div class="mt-3">
+                                        <button type="button" wire:click="probarConexion({{ $zonaId }})"
+                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-800 bg-green-200 rounded-md hover:bg-green-300 transition">
+                                            <svg wire:loading.remove wire:target="probarConexion" class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            <svg wire:loading wire:target="probarConexion" class="animate-spin h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                            </svg>
+                                            Probar conexión
+                                        </button>
+                                        @if(session('success'))
+                                            <span class="ml-2 text-sm text-green-700 font-medium">{{ session('success') }}</span>
+                                        @endif
+                                        @if(session('error'))
+                                            <span class="ml-2 text-sm text-red-600 font-medium">{{ session('error') }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
                             <!-- Configuración Trial -->
                             <div class="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-md border border-blue-200">
                                 <div class="flex items-center justify-between mb-4">

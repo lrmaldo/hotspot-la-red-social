@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Zonas;
 
 use App\Models\Zona;
+use App\Services\MikrotikService;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
 #[Title('Gestión de Zonas')]
@@ -35,6 +36,8 @@ class Index extends Component
     public string $color_primario = '#1a56db';
     public string $color_secundario = '#ffffff';
     public ?string $facebook_url = null;
+    public ?string $mikrotik_user = null;
+    public ?string $mikrotik_password = null;
     public bool $is_active = true;
 
     public function rules(): array
@@ -52,6 +55,8 @@ class Index extends Component
             'color_primario' => 'required|string|size:7',
             'color_secundario' => 'required|string|size:7',
             'facebook_url' => 'nullable|url',
+            'mikrotik_user' => 'nullable|string|max:100',
+            'mikrotik_password' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ];
     }
@@ -81,6 +86,8 @@ class Index extends Component
         $this->venta_vouchers_activa = $zona->venta_vouchers_activa;
         $this->trial_enabled = $zona->trial_enabled;
         $this->trial_duration_seconds = $zona->trial_duration_seconds;
+        $this->mikrotik_user = $zona->mikrotik_user;
+        $this->mikrotik_password = null;
         $this->logo_path = $zona->logo_path;
         $this->logo = null;
         $this->color_primario = $zona->color_primario;
@@ -106,6 +113,10 @@ class Index extends Component
 
         unset($validatedData['logo']);
 
+        if (empty($validatedData['mikrotik_password'])) {
+            unset($validatedData['mikrotik_password']);
+        }
+
         Zona::updateOrCreate(
             ['id' => $this->zonaId],
             $validatedData
@@ -129,11 +140,23 @@ class Index extends Component
         $zona->update(['is_active' => !$zona->is_active]);
     }
 
+    public function probarConexion(int $zonaId): void
+    {
+        $zona = Zona::findOrFail($zonaId);
+        $ok = (new MikrotikService($zona))->verificarConexion();
+
+        session()->flash(
+            $ok ? 'success' : 'error',
+            $ok ? 'Conexión exitosa al MikroTik' : 'No se pudo conectar al MikroTik',
+        );
+    }
+
     public function resetForm()
     {
         $this->reset([
-            'zonaId', 'nombre', 'id_personalizado', 'descripcion', 
-            'hotspot_host', 'logo', 'logo_path', 'facebook_url'
+            'zonaId', 'nombre', 'id_personalizado', 'descripcion',
+            'hotspot_host', 'mikrotik_user', 'mikrotik_password',
+            'logo', 'logo_path', 'facebook_url',
         ]);
         $this->tipo_autenticacion = 'pin';
         $this->venta_vouchers_activa = false;
