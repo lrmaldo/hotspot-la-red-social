@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Livewire\Portal;
 
+use App\Models\Plan;
+use App\Models\Voucher;
 use App\Models\Zona;
+use App\Services\StripeService;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-
-use Livewire\Attributes\Url;
 
 #[Layout('layouts.portal')]
 class CarruselCampanas extends Component
@@ -21,6 +23,14 @@ class CarruselCampanas extends Component
 
     public string $displayMode = 'carrusel';
     public ?\App\Models\Campana $activeVideo = null;
+
+    // Compra de vouchers
+    public Collection $planes;
+    public bool $mostrarCompra = false;
+    public ?int $planId = null;
+    public string $compraNombre = '';
+    public string $compraEmail = '';
+    public bool $compraCargando = false;
 
     // Parámetros de MikroTik
     public ?string $mac = null;
@@ -55,7 +65,12 @@ class CarruselCampanas extends Component
         $this->mac_esc = $request->input('mac-esc', $this->mac_esc);
 
         $this->zona = $zona;
-        
+
+        // Cargar planes si venta activa
+        $this->planes = $zona->venta_vouchers_activa
+            ? $zona->planes()->activos()->orderBy('precio')->get()
+            : collect();
+
         $allCampanas = $this->zona->campanas()->where('is_active', true)->get();
         $videos = $allCampanas->where('tipo', 'video');
         $imagenes = $allCampanas->where('tipo', 'imagen');
@@ -68,6 +83,47 @@ class CarruselCampanas extends Component
         // Si hay video, la lógica de "Internet Gratis" se basará en él.
         // Mientras tanto, se muestra el carrusel de imágenes (banners por defecto).
         $this->displayMode = 'mixto';
+    }
+
+    public function abrirCompra(): void
+    {
+        $this->mostrarCompra = true;
+        $this->dispatch('abrir-compra');
+    }
+
+    public function cerrarCompra(): void
+    {
+        $this->mostrarCompra = false;
+    }
+
+    public function seleccionarPlan(int $planId): void
+    {
+        $this->planId = $planId;
+        $this->dispatch('plan-seleccionado');
+    }
+
+    public function iniciarPago(): void
+    {
+        $this->validate([
+            'planId'      => ['required', 'exists:planes,id'],
+            'compraEmail' => ['nullable', 'email'],
+        ]);
+
+        $plan = Plan::findOrFail($this->planId);
+
+        $voucher = Voucher::create([
+            'zona_id'          => $this->zona->id,
+            'plan_id'          => $plan->id,
+            'codigo'           => Voucher::generarCodigo(),
+            'estado'           => 'pendiente',
+            'comprador_nombre' => $this->compraNombre ?: null,
+            'comprador_email'  => $this->compraEmail ?: null,
+        ]);
+
+        $url = (new StripeService())->crearSesionCheckout($plan, $this->zona, $voucher);
+
+        $this->compraCargando = true;
+        $this->redirect($url);
     }
 
     #[Title('Bienvenido al Portal')]

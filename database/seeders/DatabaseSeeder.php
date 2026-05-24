@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             ZonaSeeder::class,
             CampanaSeeder::class,
+            PlanSeeder::class,
             SettingsSeeder::class,
         ]);
     }

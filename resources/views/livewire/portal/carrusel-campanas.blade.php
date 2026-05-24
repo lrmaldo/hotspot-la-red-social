@@ -1,4 +1,4 @@
-﻿<div>
+﻿<div x-data="{ showCompraModal: false }">
     <style>
         :root {
             --color-background: #ffffff;
@@ -325,6 +325,401 @@
 
         [x-cloak] { display: none !important; }
 
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== MODAL COMPRA VOUCHER ===== */
+        .compra-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100000;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .compra-modal {
+            background: white;
+            border-radius: 1.5rem;
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100001;
+        }
+
+        .compra-header {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 2rem 1.5rem 1.5rem;
+            border-radius: 1.5rem 1.5rem 0 0;
+            text-align: center;
+            position: relative;
+            pointer-events: none;
+        }
+
+        .compra-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            pointer-events: none;
+        }
+
+        .compra-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 6px;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        .compra-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        .compra-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .compra-body {
+            padding: 2rem;
+        }
+
+        .compra-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 2rem;
+            padding: 0 10%;
+        }
+
+        .compra-step-item {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .compra-step-item:last-child {
+            flex: 0;
+        }
+
+        .compra-step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+
+        .compra-step-dot.active {
+            background-color: var(--color-primary);
+            color: white;
+            box-shadow: 0 0 0 4px var(--color-input-focus);
+            transform: scale(1.1);
+        }
+
+        .compra-step-dot.inactive {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+        }
+
+        .compra-step-dot.done {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .compra-step-line {
+            flex-grow: 1;
+            height: 3px;
+            background: #e2e8f0;
+            margin: 0 8px;
+            border-radius: 999px;
+            transition: background 0.4s;
+        }
+
+        .compra-step-line.active {
+            background: var(--color-primary);
+        }
+
+        .plan-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            background: white;
+        }
+
+        .plan-card:hover {
+            border-color: var(--color-primary);
+            background: #f8fafc;
+            transform: translateY(-2px);
+        }
+
+        .plan-card.selected {
+            border-color: var(--color-primary);
+            background: color-mix(in srgb, var(--color-primary) 5%, white);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-card.selected::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            bottom: -2px;
+            left: -2px;
+            border: 2px solid var(--color-primary);
+            border-radius: 1rem;
+            pointer-events: none;
+        }
+
+        .plan-card .plan-info h4 {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #0f172a;
+            margin: 0 0 2px 0;
+        }
+
+        .plan-card .plan-info .plan-duration {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .plan-card .plan-price {
+            text-align: right;
+        }
+
+        .plan-card .plan-price .amount {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--color-primary);
+            line-height: 1;
+        }
+
+        .plan-card .plan-price .currency {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .compra-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .compra-input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .compra-input-wrapper {
+            position: relative;
+        }
+
+        .compra-input {
+            width: 100%;
+            padding: 0.875rem 1.125rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+            outline: none;
+            background: #f8fafc;
+            box-sizing: border-box;
+            color: #0f172a;
+        }
+
+        .compra-input:focus {
+            border-color: var(--color-primary);
+            background: white;
+            box-shadow: 0 0 0 4px var(--color-input-focus);
+        }
+
+        .compra-btn-primary {
+            width: 100%;
+            padding: 1.125rem;
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 0.875rem;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px var(--color-input-focus);
+        }
+
+        .compra-btn-primary:hover {
+            background-color: var(--color-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px var(--color-input-focus);
+        }
+
+        .compra-btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .compra-btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .compra-btn-secondary {
+            width: 100%;
+            padding: 1rem;
+            background: #f8fafc;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.875rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .compra-btn-secondary:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+
+        .compra-resumen {
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .compra-resumen-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .compra-resumen-row .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .compra-resumen-row .value {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .compra-resumen-total {
+            border-top: 2px solid #e2e8f0;
+            margin-top: 0.75rem;
+            padding-top: 1rem;
+        }
+
+        .compra-resumen-total .value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--color-primary);
+        }
+
+        .compra-stripe-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .compra-stripe-badge svg {
+            color: #635bff; /* Color Stripe */
+        }
+
+        /* Media Queries para Modal Responsive */
+        @media (max-width: 640px) {
+            .compra-modal {
+                max-width: 95% !important;
+                max-height: 95vh !important;
+            }
+            .compra-body {
+                padding: 1.5rem !important;
+            }
+            .compra-steps {
+                padding: 0 5% !important;
+            }
+            .compra-step-dot {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 0.8rem !important;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 768px) {
+            .compra-modal {
+                max-width: 550px !important;
+            }
+        }
+
+
         /* Media Queries para Responsive Design (Desktop) */
         @media (min-width: 768px) {
             body {
@@ -591,6 +986,19 @@
                     </form>
                 </div>
 
+                @if(isset($zona) && $zona->venta_vouchers_activa && $planes->isNotEmpty())
+                    <div style="margin-top: 1.5rem;">
+                        <button type="button" 
+                                @click="showCompraModal = true"
+                                style="width: 100%; height: 55px; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: var(--shadow-md); transition: opacity 0.2s;">
+                            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            <span>Comprar Acceso WiFi</span>
+                        </button>
+                    </div>
+                @endif
+
                 @if(isset($zona) && $zona->trial_enabled)
                     <div class="divider">
                         <span>O ve publicidad para obtener</span>
@@ -624,13 +1032,13 @@
                     <div style="margin-top: 1.5rem; text-align: center;">
                         <a href="{{ $zona->facebook_url }}" target="_blank" style="color: #1877f2; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem;">
                             <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            VisÃ­tanos en nuestra Fanpage
+                            Visítanos en nuestra Fanpage
                         </a>
                     </div>
                 @endif
 
                 <p class="footer-text">
-                    Al conectar, aceptas nuestra polÃ­tica de uso justo y los tÃ©rminos de servicio de la red.
+                    Al conectar, aceptas nuestra política de uso justo y los términos de servicio de la red.
                 </p>
             </div>
             
@@ -638,6 +1046,220 @@
         
     </div>
 
+    {{-- ============================================= --}}
+    {{-- MODAL: COMPRA DE VOUCHER                     --}}
+    {{-- ============================================= --}}
+    
+    <div x-show="showCompraModal" x-cloak
+         @click="showCompraModal = false"
+         style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 999999; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 1rem; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+        
+        <div x-data="{ paso: 1 }" 
+             @click.stop
+             class="compra-modal" 
+             style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
+
+            {{-- Header --}}
+            <div class="compra-header" style="background: var(--color-primary); flex-shrink: 0;">
+                <button type="button" class="compra-close" @click="showCompraModal = false">
+                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <svg style="width:28px;height:28px;margin:0 auto 6px;pointer-events:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                    </svg>
+                    <h2>Comprar Acceso WiFi</h2>
+                    <p>{{ $zona->nombre }}</p>
+                </div>
+
+                {{-- Body con scroll --}}
+                <div class="compra-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                    
+                    {{-- Steps indicator --}}
+                    <div class="compra-steps">
+                        <div class="compra-step-item">
+                            <div class="compra-step-dot" :class="paso === 1 ? 'active' : (paso > 1 ? 'done' : 'inactive')">
+                                <span x-show="paso <= 1">1</span>
+                                <svg x-show="paso > 1" x-cloak style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div class="compra-step-line" :class="paso > 1 ? 'active' : ''"></div>
+                        </div>
+                        <div class="compra-step-item">
+                            <div class="compra-step-dot" :class="paso === 2 ? 'active' : (paso > 2 ? 'done' : 'inactive')">
+                                <span x-show="paso <= 2">2</span>
+                                <svg x-show="paso > 2" x-cloak style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div class="compra-step-line" :class="paso > 2 ? 'active' : ''"></div>
+                        </div>
+                        <div class="compra-step-item">
+                            <div class="compra-step-dot" :class="paso === 3 ? 'active' : 'inactive'">
+                                <span>3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- PASO 1: SelecciÃ³n de plan --}}
+                    <div x-show="paso === 1">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Selecciona un plan</h3>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Elige el tiempo de conexiÃ³n que necesites</p>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            @foreach($planes as $plan)
+                                <div class="plan-card {{ $planId === $plan->id ? 'selected' : '' }}"
+                                     wire:click="seleccionarPlan({{ $plan->id }})"
+                                     @click="paso = 2">
+                                    <div class="plan-info">
+                                        <h4>{{ $plan->nombre }}</h4>
+                                        <div class="plan-duration">
+                                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            @if($plan->duracion_minutos < 60)
+                                                {{ $plan->duracion_minutos }} minutos
+                                            @elseif($plan->duracion_minutos < 1440)
+                                                {{ intdiv($plan->duracion_minutos, 60) }} {{ intdiv($plan->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
+                                            @elseif($plan->duracion_minutos < 10080)
+                                                {{ intdiv($plan->duracion_minutos, 1440) }} {{ intdiv($plan->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dÃ­as' }}
+                                            @else
+                                                {{ intdiv($plan->duracion_minutos, 10080) }} {{ intdiv($plan->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
+                                            @endif
+                                        </div>
+                                        @if($plan->descripcion)
+                                            <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px; line-height:1.3;">{{ $plan->descripcion }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="plan-price">
+                                        <div class="amount">${{ number_format($plan->precio, 2) }}</div>
+                                        <div class="currency">MXN</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- PASO 2: Datos del comprador --}}
+                    <div x-show="paso === 2">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Tus datos</h3>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Para enviarte tu comprobante y PIN</p>
+                        </div>
+
+                        <div class="compra-input-group">
+                            <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
+                            <div class="compra-input-wrapper">
+                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan PÃ©rez">
+                            </div>
+                        </div>
+
+                        <div class="compra-input-group">
+                            <label class="compra-input-label">Correo electrÃ³nico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
+                            <div class="compra-input-wrapper">
+                                <input type="email" wire:model.live="compraEmail" class="compra-input" placeholder="ejemplo@correo.com">
+                            </div>
+                            @error('compraEmail') <p style="color:#ef4444; font-size:0.75rem; margin-top:6px; font-weight:500;">{{ $message }}</p> @enderror
+                            <p style="font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; gap:4px;">
+                                <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Te enviaremos tu cÃ³digo de acceso por este medio
+                            </p>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem; margin-top:2rem;">
+                            <button type="button" class="compra-btn-secondary" @click="paso = 1">
+                                Volver
+                            </button>
+                            <button type="button" class="compra-btn-primary" @click="paso = 3" :disabled="!$wire.planId">
+                                Continuar
+                                <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- PASO 3: Resumen y pago --}}
+                    <div x-show="paso === 3">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Confirmar compra</h3>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
+                        </div>
+
+                        @if($planId)
+                            @php $planSel = $planes->firstWhere('id', $planId); @endphp
+                            @if($planSel)
+                                <div class="compra-resumen">
+                                    <div class="compra-resumen-row">
+                                        <span class="label">Plan seleccionado</span>
+                                        <span class="value">{{ $planSel->nombre }}</span>
+                                    </div>
+                                    <div class="compra-resumen-row">
+                                        <span class="label">DuraciÃ³n</span>
+                                        <span class="value">
+                                            @if($planSel->duracion_minutos < 60)
+                                                {{ $planSel->duracion_minutos }} min
+                                            @elseif($planSel->duracion_minutos < 1440)
+                                                {{ intdiv($planSel->duracion_minutos, 60) }} {{ intdiv($planSel->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
+                                            @elseif($planSel->duracion_minutos < 10080)
+                                                {{ intdiv($planSel->duracion_minutos, 1440) }} {{ intdiv($planSel->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dÃ­as' }}
+                                            @else
+                                                {{ intdiv($planSel->duracion_minutos, 10080) }} {{ intdiv($planSel->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($compraNombre)
+                                        <div class="compra-resumen-row">
+                                            <span class="label">Nombre</span>
+                                            <span class="value">{{ $compraNombre }}</span>
+                                        </div>
+                                    @endif
+                                    @if($compraEmail)
+                                        <div class="compra-resumen-row">
+                                            <span class="label">Correo</span>
+                                            <span class="value">{{ $compraEmail }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="compra-resumen-row compra-resumen-total">
+                                        <span class="label" style="font-weight:800; color:#0f172a;">Total a pagar</span>
+                                        <span class="value">${{ number_format($planSel->precio, 2) }} MXN</span>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+
+                        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                            <button type="button" class="compra-btn-primary" wire:click="iniciarPago"
+                                    wire:loading.attr="disabled" wire:loading.class="opacity-70">
+                                <span wire:loading.remove wire:target="iniciarPago" style="display:flex; align-items:center; gap:8px;">
+                                    <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                    Pagar con Tarjeta
+                                </span>
+                                <span wire:loading wire:target="iniciarPago" style="display:flex; align-items:center; gap:10px;">
+                                    <svg style="width:20px;height:20px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24">
+                                        <circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    Procesando...
+                                </span>
+                            </button>
+                            
+                            <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 2">
+                                Volver a editar datos
+                            </button>
+                        </div>
+
+                        <div class="compra-stripe-badge">
+                            <svg style="width:16px;height:16px;" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M13.911 10.119c0-1.045-.806-1.492-2.148-1.492-1.343 0-2.313.433-2.313.433l-.194-1.343s1.178-.507 2.686-.507c2.402 0 3.73 1.134 3.73 3.014 0 3.208-4.401 3.536-4.401 4.387 0 .343.344.477.94.477 1.059 0 2.223-.522 2.223-.522l.224 1.358s-1.119.567-2.73.567c-2.059 0-3.238-1.104-3.238-2.671 0-3.372 4.178-3.61 4.178-4.197zM24 12c0 6.627-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0s12 5.373 12 12zM6.985 9.776V8.104l-2.029.358V9.776h2.029zm0 6.12v-4.686H4.956v4.686H6.985zM11.97 15.896V8.104l-2.03.358V15.896H11.97zm8.448-6.12v-1.671l-2.029.358V15.896h2.029V11.21c0-.986.746-1.358 1.493-1.358.119 0 .224.015.224.015V8.104s-.403-.09-.94-.09c-1.164 0-1.805.626-1.805 1.762v-.015h.03z"></path>
+                            </svg>
+                            Pago seguro mediante Stripe
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <form name="sendin" action="{{ $link_login_only }}" method="post" style="display:none;">
