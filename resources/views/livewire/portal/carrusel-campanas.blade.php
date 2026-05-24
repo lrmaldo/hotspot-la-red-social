@@ -606,7 +606,7 @@
         }
 
         .compra-btn-primary:hover {
-            background-color: var(--color-secondary);
+            filter: brightness(0.9);
             transform: translateY(-2px);
             box-shadow: 0 20px 25px -5px var(--color-input-focus);
         }
@@ -1227,19 +1227,21 @@
                         <div style="display:flex; flex-direction:column; gap:0.75rem;">
                             <button type="button" class="compra-btn-primary" wire:click="iniciarPago"
                                     wire:loading.attr="disabled" wire:loading.class="opacity-70">
-                                <span wire:loading.remove wire:target="iniciarPago" style="display:flex; align-items:center; gap:8px;">
+                                
+                                <div wire:loading.remove wire:target="iniciarPago" style="display:flex; align-items:center; justify-content:center; gap:8px;">
                                     <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                     Pagar con Tarjeta
-                                </span>
-                                <span wire:loading wire:target="iniciarPago" style="display:flex; align-items:center; gap:10px;">
+                                </div>
+                                
+                                <div wire:loading wire:target="iniciarPago" style="display:none; align-items:center; justify-content:center; gap:10px;">
                                     <svg style="width:20px;height:20px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24">
                                         <circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                     </svg>
                                     Procesando...
-                                </span>
+                                </div>
                             </button>
                             
                             <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 2">
