@@ -1055,7 +1055,9 @@
          style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 999999; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 1rem; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
         
         <div x-data="{ paso: 1 }" 
+             x-init="console.log('🎯 Alpine inicializado en modal, paso:', paso)"
              @click.stop
+             @plan-seleccionado.window="console.log('✅ Evento plan-seleccionado recibido'); paso = 3"
              class="compra-modal" 
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
 
@@ -1086,20 +1088,13 @@
                             <div class="compra-step-line" :class="paso > 1 ? 'active' : ''"></div>
                         </div>
                         <div class="compra-step-item">
-                            <div class="compra-step-dot" :class="paso === 2 ? 'active' : (paso > 2 ? 'done' : 'inactive')">
-                                <span x-show="paso <= 2">2</span>
-                                <svg x-show="paso > 2" x-cloak style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                            <div class="compra-step-line" :class="paso > 2 ? 'active' : ''"></div>
-                        </div>
-                        <div class="compra-step-item">
                             <div class="compra-step-dot" :class="paso === 3 ? 'active' : 'inactive'">
-                                <span>3</span>
+                                <span>2</span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- PASO 1: SelecciÃ³n de plan --}}
+                    {{-- PASO 1: Seleccion de plan --}}
                     <div x-show="paso === 1">
                         <div style="text-align: center; margin-bottom: 1.5rem;">
                             <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Selecciona un plan</h3>
@@ -1109,8 +1104,7 @@
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             @foreach($planes as $plan)
                                 <div class="plan-card {{ $planId === $plan->id ? 'selected' : '' }}"
-                                     wire:click="seleccionarPlan({{ $plan->id }})"
-                                     @click="paso = 2">
+                                     @click="paso = 3; $wire.seleccionarPlan({{ $plan->id }})">
                                     <div class="plan-info">
                                         <h4>{{ $plan->nombre }}</h4>
                                         <div class="plan-duration">
@@ -1120,7 +1114,7 @@
                                             @elseif($plan->duracion_minutos < 1440)
                                                 {{ intdiv($plan->duracion_minutos, 60) }} {{ intdiv($plan->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
                                             @elseif($plan->duracion_minutos < 10080)
-                                                {{ intdiv($plan->duracion_minutos, 1440) }} {{ intdiv($plan->duracion_minutos, 1440) === 1 ? 'di­a' : 'dÃ­as' }}
+                                                {{ intdiv($plan->duracion_minutos, 1440) }} {{ intdiv($plan->duracion_minutos, 1440) === 1 ? 'di­a' : 'di­as' }}
                                             @else
                                                 {{ intdiv($plan->duracion_minutos, 10080) }} {{ intdiv($plan->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
                                             @endif
@@ -1138,18 +1132,13 @@
                         </div>
                     </div>
 
-                    {{-- PASO 2: Datos del comprador --}}
-                    <div x-show="paso === 2">
-                        <div style="text-align: center; margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Tus datos</h3>
-                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Para enviarte tu comprobante y PIN</p>
-                        </div>
 
-                        <div class="compra-input-group">
-                            <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
-                            <div class="compra-input-wrapper">
-                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan Perez">
-                            </div>
+
+                    {{-- PASO 3: Resumen y pago --}}
+                    <div x-show="paso === 3">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Confirmar compra</h3>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
                         </div>
 
                         <div class="compra-input-group">
@@ -1164,22 +1153,11 @@
                             </p>
                         </div>
 
-                        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem; margin-top:2rem;">
-                            <button type="button" class="compra-btn-secondary" @click="paso = 1">
-                                Volver
-                            </button>
-                            <button type="button" class="compra-btn-primary" @click="paso = 3" :disabled="!$wire.planId">
-                                Continuar
-                                <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- PASO 3: Resumen y pago --}}
-                    <div x-show="paso === 3">
-                        <div style="text-align: center; margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Confirmar compra</h3>
-                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
+                        <div class="compra-input-group">
+                            <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
+                            <div class="compra-input-wrapper">
+                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan Perez">
+                            </div>
                         </div>
 
                         @if($planId)
@@ -1244,8 +1222,8 @@
                                 </div>
                             </button>
                             
-                            <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 2">
-                                Volver a editar datos
+                            <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 1">
+                                Volver a seleccionar plan
                             </button>
                         </div>
 

@@ -9,6 +9,7 @@ use App\Models\Voucher;
 use App\Models\Zona;
 use App\Services\StripeService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -108,6 +109,7 @@ class CarruselCampanas extends Component
             'planId'      => ['required', 'exists:planes,id'],
             'compraEmail' => ['nullable', 'email'],
         ]);
+        Log::info("Iniciando proceso de compra para Zona ID {$this->zona->id}, Plan ID {$this->planId}, Email: {$this->compraEmail}");
 
         $plan = Plan::findOrFail($this->planId);
 
