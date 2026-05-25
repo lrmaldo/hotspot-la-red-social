@@ -1103,7 +1103,7 @@
                     <div x-show="paso === 1">
                         <div style="text-align: center; margin-bottom: 1.5rem;">
                             <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Selecciona un plan</h3>
-                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Elige el tiempo de conexiÃ³n que necesites</p>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Elige el tiempo de conexión que necesites</p>
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -1120,7 +1120,7 @@
                                             @elseif($plan->duracion_minutos < 1440)
                                                 {{ intdiv($plan->duracion_minutos, 60) }} {{ intdiv($plan->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
                                             @elseif($plan->duracion_minutos < 10080)
-                                                {{ intdiv($plan->duracion_minutos, 1440) }} {{ intdiv($plan->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dÃ­as' }}
+                                                {{ intdiv($plan->duracion_minutos, 1440) }} {{ intdiv($plan->duracion_minutos, 1440) === 1 ? 'di­a' : 'dÃ­as' }}
                                             @else
                                                 {{ intdiv($plan->duracion_minutos, 10080) }} {{ intdiv($plan->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
                                             @endif
@@ -1148,19 +1148,19 @@
                         <div class="compra-input-group">
                             <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
                             <div class="compra-input-wrapper">
-                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan PÃ©rez">
+                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan Perez">
                             </div>
                         </div>
 
                         <div class="compra-input-group">
-                            <label class="compra-input-label">Correo electrÃ³nico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
+                            <label class="compra-input-label">Correo electrónico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
                             <div class="compra-input-wrapper">
                                 <input type="email" wire:model.live="compraEmail" class="compra-input" placeholder="ejemplo@correo.com">
                             </div>
                             @error('compraEmail') <p style="color:#ef4444; font-size:0.75rem; margin-top:6px; font-weight:500;">{{ $message }}</p> @enderror
                             <p style="font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; gap:4px;">
                                 <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Te enviaremos tu cÃ³digo de acceso por este medio
+                                Te enviaremos tu código de acceso por este medio
                             </p>
                         </div>
 
@@ -1191,14 +1191,14 @@
                                         <span class="value">{{ $planSel->nombre }}</span>
                                     </div>
                                     <div class="compra-resumen-row">
-                                        <span class="label">DuraciÃ³n</span>
+                                        <span class="label">Duración</span>
                                         <span class="value">
                                             @if($planSel->duracion_minutos < 60)
                                                 {{ $planSel->duracion_minutos }} min
                                             @elseif($planSel->duracion_minutos < 1440)
                                                 {{ intdiv($planSel->duracion_minutos, 60) }} {{ intdiv($planSel->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
                                             @elseif($planSel->duracion_minutos < 10080)
-                                                {{ intdiv($planSel->duracion_minutos, 1440) }} {{ intdiv($planSel->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dÃ­as' }}
+                                                {{ intdiv($planSel->duracion_minutos, 1440) }} {{ intdiv($planSel->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dí­as' }}
                                             @else
                                                 {{ intdiv($planSel->duracion_minutos, 10080) }} {{ intdiv($planSel->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
                                             @endif

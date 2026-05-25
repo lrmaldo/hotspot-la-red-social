@@ -21,7 +21,7 @@ class StripeService
 
     public function crearSesionCheckout(Plan $plan, Zona $zona, Voucher $voucher): string
     {
-        $session = $this->stripe->checkout->sessions->create([
+        $checkoutData = [
             'mode'        => 'payment',
             'line_items'  => [[
                 'price_data' => [
@@ -40,9 +40,14 @@ class StripeService
                 'voucher_id' => (string) $voucher->id,
                 'zona_id'    => (string) $zona->id,
                 'plan_id'    => (string) $plan->id,
-            ],
-            'customer_email' => $voucher->comprador_email ?: null,
-        ]);
+            ]
+        ];
+
+        if (!empty($voucher->comprador_email)) {
+            $checkoutData['customer_email'] = $voucher->comprador_email;
+        }
+
+        $session = $this->stripe->checkout->sessions->create($checkoutData);
 
         return $session->url;
     }
