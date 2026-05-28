@@ -988,8 +988,9 @@
 
                 @if(isset($zona) && $zona->venta_vouchers_activa && $planes->isNotEmpty())
                     <div style="margin-top: 1.5rem;">
-                        <button type="button" 
-                                @click="showCompraModal = true"
+                        <button type="button"
+                            wire:click="abrirCompra"
+                            @click="$dispatch('abrir-compra-modal'); showCompraModal = true"
                                 style="width: 100%; height: 55px; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: var(--shadow-md); transition: opacity 0.2s;">
                             <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -1054,10 +1055,29 @@
          @click="showCompraModal = false"
          style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 999999; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(8px); padding: 1rem; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
         
-        <div x-data="{ paso: 1 }" 
-             x-init="console.log('🎯 Alpine inicializado en modal, paso:', paso)"
+                         <div x-data="{
+                     paso: 1,
+                     planSel: null,
+                     compraNombre: '',
+                     compraEmail: '',
+                     selectPlan(planId, nombre, precio, duracion) {
+                         this.planSel = {
+                             id: Number(planId),
+                             nombre: nombre,
+                             precio: Number(precio),
+                             duracion: Number(duracion)
+                         };
+                         this.paso = 3;
+                     },
+                     formatDuracion(mins) {
+                         if (mins < 60) return mins + ' min';
+                         if (mins < 1440) { let h = Math.floor(mins/60); return h + (h===1?' hora':' horas'); }
+                         if (mins < 10080) { let d = Math.floor(mins/1440); return d + (d===1?' día':' días'); }
+                         let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
+                     }
+                 }"
+                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''"
              @click.stop
-             @plan-seleccionado.window="console.log('✅ Evento plan-seleccionado recibido'); paso = 3"
              class="compra-modal" 
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
 
@@ -1103,8 +1123,14 @@
 
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             @foreach($planes as $plan)
-                                <div class="plan-card {{ $planId === $plan->id ? 'selected' : '' }}"
-                                     @click="paso = 3; $wire.seleccionarPlan({{ $plan->id }})">
+                                  <div class="plan-card"
+                                      :class="planSel && planSel.id === {{ $plan->id }} ? 'selected' : ''"
+                                      wire:key="plan-{{ $plan->id }}"
+                                      data-plan-id="{{ $plan->id }}"
+                                      data-plan-nombre="{{ $plan->nombre }}"
+                                      data-plan-precio="{{ (float) $plan->precio }}"
+                                      data-plan-duracion="{{ (int) $plan->duracion_minutos }}"
+                                      @click="selectPlan($el.dataset.planId, $el.dataset.planNombre, $el.dataset.planPrecio, $el.dataset.planDuracion)">
                                     <div class="plan-info">
                                         <h4>{{ $plan->nombre }}</h4>
                                         <div class="plan-duration">
@@ -1141,12 +1167,16 @@
                             <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
                         </div>
 
+                        <form method="POST" action="{{ route('portal.checkout', $zona) }}" style="display:flex; flex-direction:column; gap:0.75rem;">
+                            @csrf
+                            <input type="hidden" name="plan_id" :value="planSel ? planSel.id : ''">
+
                         <div class="compra-input-group">
                             <label class="compra-input-label">Correo electrónico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
                             <div class="compra-input-wrapper">
-                                <input type="email" wire:model.live="compraEmail" class="compra-input" placeholder="ejemplo@correo.com">
+                                <input type="email" x-model="compraEmail" name="compra_email" class="compra-input" placeholder="ejemplo@correo.com">
                             </div>
-                            @error('compraEmail') <p style="color:#ef4444; font-size:0.75rem; margin-top:6px; font-weight:500;">{{ $message }}</p> @enderror
+                            @error('compra_email') <p style="color:#ef4444; font-size:0.75rem; margin-top:6px; font-weight:500;">{{ $message }}</p> @enderror
                             <p style="font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; gap:4px;">
                                 <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 Te enviaremos tu código de acceso por este medio
@@ -1156,76 +1186,55 @@
                         <div class="compra-input-group">
                             <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
                             <div class="compra-input-wrapper">
-                                <input type="text" wire:model.live="compraNombre" class="compra-input" placeholder="Ej: Juan Perez">
+                                <input type="text" x-model="compraNombre" name="compra_nombre" class="compra-input" placeholder="Ej: Juan Perez">
                             </div>
                         </div>
 
-                        @if($planId)
-                            @php $planSel = $planes->firstWhere('id', $planId); @endphp
-                            @if($planSel)
-                                <div class="compra-resumen">
-                                    <div class="compra-resumen-row">
-                                        <span class="label">Plan seleccionado</span>
-                                        <span class="value">{{ $planSel->nombre }}</span>
-                                    </div>
-                                    <div class="compra-resumen-row">
-                                        <span class="label">Duración</span>
-                                        <span class="value">
-                                            @if($planSel->duracion_minutos < 60)
-                                                {{ $planSel->duracion_minutos }} min
-                                            @elseif($planSel->duracion_minutos < 1440)
-                                                {{ intdiv($planSel->duracion_minutos, 60) }} {{ intdiv($planSel->duracion_minutos, 60) === 1 ? 'hora' : 'horas' }}
-                                            @elseif($planSel->duracion_minutos < 10080)
-                                                {{ intdiv($planSel->duracion_minutos, 1440) }} {{ intdiv($planSel->duracion_minutos, 1440) === 1 ? 'dÃ­a' : 'dí­as' }}
-                                            @else
-                                                {{ intdiv($planSel->duracion_minutos, 10080) }} {{ intdiv($planSel->duracion_minutos, 10080) === 1 ? 'semana' : 'semanas' }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                    @if($compraNombre)
-                                        <div class="compra-resumen-row">
-                                            <span class="label">Nombre</span>
-                                            <span class="value">{{ $compraNombre }}</span>
-                                        </div>
-                                    @endif
-                                    @if($compraEmail)
-                                        <div class="compra-resumen-row">
-                                            <span class="label">Correo</span>
-                                            <span class="value">{{ $compraEmail }}</span>
-                                        </div>
-                                    @endif
-                                    <div class="compra-resumen-row compra-resumen-total">
-                                        <span class="label" style="font-weight:800; color:#0f172a;">Total a pagar</span>
-                                        <span class="value">${{ number_format($planSel->precio, 2) }} MXN</span>
-                                    </div>
+                        <template x-if="planSel">
+                            <div class="compra-resumen">
+                                <div class="compra-resumen-row">
+                                    <span class="label">Plan seleccionado</span>
+                                    <span class="value" x-text="planSel.nombre"></span>
                                 </div>
-                            @endif
-                        @endif
+                                <div class="compra-resumen-row">
+                                    <span class="label">Duración</span>
+                                    <span class="value" x-text="formatDuracion(planSel.duracion)"></span>
+                                </div>
+                                <template x-if="compraNombre">
+                                    <div class="compra-resumen-row">
+                                        <span class="label">Nombre</span>
+                                        <span class="value" x-text="compraNombre"></span>
+                                    </div>
+                                </template>
+                                <template x-if="compraEmail">
+                                    <div class="compra-resumen-row">
+                                        <span class="label">Correo</span>
+                                        <span class="value" x-text="compraEmail"></span>
+                                    </div>
+                                </template>
+                                <div class="compra-resumen-row compra-resumen-total">
+                                    <span class="label" style="font-weight:800; color:#0f172a;">Total a pagar</span>
+                                    <span class="value" x-text="'$' + parseFloat(planSel.precio).toFixed(2) + ' MXN'"></span>
+                                </div>
+                            </div>
+                        </template>
 
                         <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                            <button type="button" class="compra-btn-primary" wire:click="iniciarPago"
-                                    wire:loading.attr="disabled" wire:loading.class="opacity-70">
-                                
-                                <div wire:loading.remove wire:target="iniciarPago" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                            @error('plan_id') <p style="color:#ef4444; font-size:0.875rem; text-align:center;">{{ $message }}</p> @enderror
+                                <button type="submit" class="compra-btn-primary" :disabled="!planSel" :style="!planSel ? 'opacity:.7; cursor:not-allowed;' : ''">
+                                <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
                                     <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
                                     Pagar con Tarjeta
                                 </div>
-                                
-                                <div wire:loading wire:target="iniciarPago" style="display:none; align-items:center; justify-content:center; gap:10px;">
-                                    <svg style="width:20px;height:20px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24">
-                                        <circle style="opacity:0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path style="opacity:0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                    Procesando...
-                                </div>
                             </button>
                             
-                            <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 1">
+                            <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 1; planSel = null">
                                 Volver a seleccionar plan
                             </button>
                         </div>
+                        </form>
 
                         <div class="compra-stripe-badge">
                             <svg style="width:16px;height:16px;" fill="currentColor" viewBox="0 0 24 24">

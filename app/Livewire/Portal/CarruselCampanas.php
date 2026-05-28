@@ -28,6 +28,7 @@ class CarruselCampanas extends Component
     // Compra de vouchers
     public Collection $planes;
     public bool $mostrarCompra = false;
+    public int $pasoCompra = 1;
     public ?int $planId = null;
     public string $compraNombre = '';
     public string $compraEmail = '';
@@ -89,27 +90,39 @@ class CarruselCampanas extends Component
     public function abrirCompra(): void
     {
         $this->mostrarCompra = true;
+        $this->pasoCompra = 1;
+        $this->planId = null;
         $this->dispatch('abrir-compra');
     }
 
     public function cerrarCompra(): void
     {
         $this->mostrarCompra = false;
+        $this->pasoCompra = 1;
+        $this->planId = null;
     }
 
     public function seleccionarPlan(int $planId): void
     {
+        Log::info('seleccionarPlan ejecutado', [
+            'planId' => $planId,
+        ]);
+
         $this->planId = $planId;
-        $this->dispatch('plan-seleccionado');
+        $this->pasoCompra = 3;
     }
 
     public function iniciarPago(): void
     {
+        Log::info("valores recibidos para iniciar pago", [
+            'planId' => $this->planId,
+            'compraEmail' => $this->compraEmail,
+        ]);
+
         $this->validate([
-            'planId'      => ['required', 'exists:planes,id'],
+            'planId' => ['required', 'exists:planes,id'],
             'compraEmail' => ['nullable', 'email'],
         ]);
-        Log::info("Iniciando proceso de compra para Zona ID {$this->zona->id}, Plan ID {$this->planId}, Email: {$this->compraEmail}");
 
         $plan = Plan::findOrFail($this->planId);
 

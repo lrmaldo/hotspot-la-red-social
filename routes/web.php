@@ -10,6 +10,7 @@ use App\Livewire\Portal\CarruselCampanas;
 use App\Livewire\Portal\CompraPlan;
 use App\Livewire\Portal\PagoExitoso;
 use App\Livewire\Portal\PinLogin;
+use App\Http\Controllers\Portal\CheckoutController;
 
 Route::get('/zona-no-encontrada', function () {
     return view('zona-no-encontrada');
@@ -28,6 +29,9 @@ Route::get('/portal/{zona:id_personalizado}/comprar', CompraPlan::class)
 
 Route::get('/portal/{zona:id_personalizado}/pago-exitoso', PagoExitoso::class)
     ->name('portal.pago-exitoso');
+
+Route::post('/portal/{zona:id_personalizado}/checkout', CheckoutController::class)
+    ->name('portal.checkout');
 
 // Alias for portal.zona (used in emails/views)
 Route::get('/portal/{zona:id_personalizado}/zona', CarruselCampanas::class)
