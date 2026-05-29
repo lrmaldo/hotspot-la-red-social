@@ -124,11 +124,11 @@
                         </p>
                     @endif
 
-                    {{-- Connect now button --}}
-                    <a href="{{ 'http://' . $zona->hotspot_host . '/login?username=' . $voucher->codigo . '&password=' . $voucher->codigo . '&dst=' . urlencode(request()->get('dst', 'http://google.com')) }}"
+                    {{-- Return to portal with PIN prefilled --}}
+                    <a href="{{ route('portal.zona', $zona) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) }}"
                        class="block w-full px-6 py-4 rounded-xl text-white text-center font-bold text-lg hover:opacity-90 transition-opacity"
                        style="background-color: var(--color-primary);">
-                        Conectarme ahora
+                        Volver y canjear mi PIN
                     </a>
                 </div>
 

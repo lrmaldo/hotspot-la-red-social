@@ -222,6 +222,33 @@
                             </div>
                         </div>
 
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Sincronización MikroTik</h4>
+                            <div class="bg-gray-50 rounded-lg p-3 text-sm space-y-2">
+                                <div>
+                                    <span class="text-gray-500">Estado:</span>
+                                    @php
+                                        $mikroBadge = match($voucherDetalle->mikrotik_sync_status) {
+                                            'ok' => 'bg-green-100 text-green-800',
+                                            'error' => 'bg-red-100 text-red-800',
+                                            default => 'bg-gray-100 text-gray-700',
+                                        };
+                                    @endphp
+                                    <span class="ml-1 px-2 py-0.5 text-xs font-semibold rounded-full {{ $mikroBadge }}">
+                                        {{ $voucherDetalle->mikrotik_sync_status ? strtoupper($voucherDetalle->mikrotik_sync_status) : 'PENDIENTE' }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Fecha sync:</span>
+                                    <span class="ml-1 text-gray-900">{{ $voucherDetalle->mikrotik_synced_at?->format('d/m/Y H:i:s') ?? '-' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Mensaje:</span>
+                                    <span class="ml-1 text-gray-900">{{ $voucherDetalle->mikrotik_sync_message ?? '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Stripe info --}}
                         @if($voucherDetalle->stripe_session_id || $voucherDetalle->stripe_payment_id)
                             <div>

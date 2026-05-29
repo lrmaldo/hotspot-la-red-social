@@ -81,8 +81,39 @@ class StripeWebhookController
                 'estado'             => 'aprobado',
             ]);
 
-            $mikrotik = new MikrotikService($voucher->zona);
-            $mikrotik->crearUsuarioHotspot($voucher);
+            // Evita reintentar creacion de usuario si ya fue sincronizado en un webhook previo.
+            if ($voucher->mikrotik_sync_status === 'ok') {
+                PagoLog::create([
+                    'voucher_id' => $voucher->id,
+                    'evento' => 'mikrotik.sync.skipped',
+                    'monto' => null,
+                    'pasarela' => 'mikrotik',
+                    'referencia_externa' => (string) $voucher->id,
+                    'respuesta_json' => ['reason' => 'already_synced'],
+                    'estado' => 'aprobado',
+                ]);
+            } else {
+                $mikrotik = new MikrotikService($voucher->zona);
+                $syncOk = $mikrotik->crearUsuarioHotspot($voucher);
+
+                $voucher->update([
+                    'mikrotik_sync_status' => $syncOk ? 'ok' : 'error',
+                    'mikrotik_sync_message' => $syncOk
+                        ? 'Usuario hotspot creado correctamente.'
+                        : 'No se pudo crear el usuario en MikroTik. Revisar conectividad/credenciales.',
+                    'mikrotik_synced_at' => $syncOk ? now() : null,
+                ]);
+
+                PagoLog::create([
+                    'voucher_id' => $voucher->id,
+                    'evento' => 'mikrotik.sync',
+                    'monto' => null,
+                    'pasarela' => 'mikrotik',
+                    'referencia_externa' => (string) $voucher->id,
+                    'respuesta_json' => ['result' => $syncOk ? 'ok' : 'error'],
+                    'estado' => $syncOk ? 'aprobado' : 'rechazado',
+                ]);
+            }
 
             if ($voucher->comprador_email) {
                 Mail::to($voucher->comprador_email)

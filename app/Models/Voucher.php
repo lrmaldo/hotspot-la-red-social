@@ -18,6 +18,9 @@ class Voucher extends Model
         'comprador_nombre',
         'comprador_email',
         'mikrotik_user_id',
+        'mikrotik_sync_status',
+        'mikrotik_sync_message',
+        'mikrotik_synced_at',
         'stripe_session_id',
         'stripe_payment_id',
         'monto_pagado',
@@ -33,6 +36,7 @@ class Voucher extends Model
             'monto_pagado' => 'decimal:2',
             'fecha_venta' => 'datetime',
             'fecha_expiracion' => 'datetime',
+            'mikrotik_synced_at' => 'datetime',
         ];
     }
 

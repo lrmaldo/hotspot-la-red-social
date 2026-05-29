@@ -74,6 +74,7 @@ class Index extends Component
                 'Código', 'Zona', 'Plan', 'Estado',
                 'Comprador', 'Email', 'Monto Pagado',
                 'Fecha Venta', 'Fecha Expiración',
+                'MikroTik Sync', 'MikroTik Sync Fecha', 'MikroTik Sync Mensaje',
             ]);
 
             foreach ($vouchers as $v) {
@@ -87,6 +88,9 @@ class Index extends Component
                     $v->monto_pagado,
                     $v->fecha_venta?->format('Y-m-d H:i:s'),
                     $v->fecha_expiracion?->format('Y-m-d H:i:s'),
+                    $v->mikrotik_sync_status,
+                    $v->mikrotik_synced_at?->format('Y-m-d H:i:s'),
+                    $v->mikrotik_sync_message,
                 ]);
             }
 

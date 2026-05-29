@@ -11,6 +11,7 @@ use App\Models\Zona;
 use App\Services\StripeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -40,7 +41,20 @@ class CheckoutController extends Controller
             'comprador_email' => $data['compra_email'] ?: null,
         ]);
 
-        $url = (new StripeService())->crearSesionCheckout($plan, $zona, $voucher);
+        try {
+            $url = (new StripeService())->crearSesionCheckout($plan, $zona, $voucher);
+        } catch (\Throwable $e) {
+            Log::error('Checkout Stripe: no se pudo crear sesion', [
+                'zona_id' => $zona->id,
+                'plan_id' => $plan->id,
+                'voucher_id' => $voucher->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $voucher->update(['estado' => 'pendiente']);
+
+            return redirect()->to(route('portal.zona', $zona) . '?checkout=error');
+        }
 
         return redirect()->away($url);
     }

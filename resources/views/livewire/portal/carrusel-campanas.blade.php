@@ -967,7 +967,7 @@
 
                         <div class="form-group">
                             <div class="input-wrapper">
-                                <input type="text" name="username" id="username" placeholder="Ingresa tu PIN (Ej: 1234567)" autofocus required style="font-size: 1rem;">
+                                <input type="text" name="username" id="username" value="{{ request()->query('prefill_pin', '') }}" placeholder="Ingresa tu PIN (Ej: 1234567)" autofocus required style="font-size: 1rem;">
                             </div>
                         </div>
                         
@@ -987,6 +987,21 @@
                 </div>
 
                 @if(isset($zona) && $zona->venta_vouchers_activa && $planes->isNotEmpty())
+                    @php $checkoutEstado = request()->query('checkout'); @endphp
+                    @if($checkoutEstado === 'ok' && request()->query('prefill_pin'))
+                        <div style="margin-top: 1rem; background: #ecfdf5; border: 1px solid #86efac; color: #166534; border-radius: 12px; padding: 0.75rem 0.9rem; font-size: 0.9rem;">
+                            Tu pago fue acreditado. Tu PIN ya está cargado, solo presiona <strong>Canjear PIN</strong>.
+                        </div>
+                    @elseif($checkoutEstado === 'cancelado')
+                        <div style="margin-top: 1rem; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; border-radius: 12px; padding: 0.75rem 0.9rem; font-size: 0.9rem;">
+                            Cancelaste el pago. Puedes intentarlo de nuevo cuando quieras.
+                        </div>
+                    @elseif($checkoutEstado === 'error')
+                        <div style="margin-top: 1rem; background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 12px; padding: 0.75rem 0.9rem; font-size: 0.9rem;">
+                            No pudimos iniciar la pasarela de pago. Intenta nuevamente en unos segundos.
+                        </div>
+                    @endif
+
                     <div style="margin-top: 1.5rem;">
                         <button type="button"
                             wire:click="abrirCompra"
