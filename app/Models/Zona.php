@@ -16,6 +16,8 @@ class Zona extends Model
         'hotspot_host',
         'mikrotik_user',
         'mikrotik_password',
+        'mikrotik_port',
+        'mikrotik_hotspot_profile',
         'tipo_autenticacion',
         'venta_vouchers_activa',
         'trial_enabled',
@@ -32,6 +34,7 @@ class Zona extends Model
         return [
             'venta_vouchers_activa' => 'boolean',
             'mikrotik_password' => 'encrypted',
+            'mikrotik_port' => 'integer',
             'trial_enabled' => 'boolean',
             'trial_duration_seconds' => 'integer',
             'is_active' => 'boolean',

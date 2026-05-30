@@ -21,27 +21,65 @@ class MikrotikService
         return new Client([
             'host'    => $this->zona->hotspot_host,
             'user'    => $this->zona->mikrotik_user ?? config('mikrotik.user'),
-            'pass'    => $this->zona->mikrotik_password
-                ? decrypt($this->zona->mikrotik_password)
-                : config('mikrotik.password'),
-            'port'    => (int) config('mikrotik.port', 8728),
+            // La columna mikrotik_password tiene cast 'encrypted' en el modelo Zona,
+            // por lo que aqui ya llega desencriptada y no debe desencriptarse de nuevo.
+            'pass'    => $this->zona->mikrotik_password ?: config('mikrotik.password'),
+            'port'    => (int) ($this->zona->mikrotik_port ?: config('mikrotik.port', 8728)),
             'timeout' => (int) config('mikrotik.timeout', 5),
         ]);
+    }
+
+    private function buscarUsuarioPorCodigo(Client $client, string $codigo): ?array
+    {
+        $query = new Query('/ip/hotspot/user/print');
+        $query->where('name', $codigo);
+        $users = $client->query($query)->read();
+
+        return empty($users) ? null : $users[0];
     }
 
     public function crearUsuarioHotspot(Voucher $voucher): bool
     {
         try {
             $client = $this->conectar();
+            $existingUser = $this->buscarUsuarioPorCodigo($client, $voucher->codigo);
+
+            $profile = $this->zona->mikrotik_hotspot_profile ?: config('mikrotik.hotspot_profile', 'default');
+            $comment = 'Voucher #' . $voucher->id;
+            $limitUptime = $voucher->plan->duracion_minutos . 'm';
+
+            if ($existingUser) {
+                $setQuery = new Query('/ip/hotspot/user/set');
+                $setQuery->equal('.id', $existingUser['.id']);
+                $setQuery->equal('password', $voucher->codigo);
+                $setQuery->equal('profile', $profile);
+                $setQuery->equal('comment', $comment);
+                $setQuery->equal('limit-uptime', $limitUptime);
+
+                $client->query($setQuery)->read();
+
+                $voucher->update([
+                    'mikrotik_user_id' => (string) $existingUser['.id'],
+                ]);
+
+                return true;
+            }
 
             $query = new Query('/ip/hotspot/user/add');
             $query->equal('name', $voucher->codigo);
             $query->equal('password', $voucher->codigo);
-            $query->equal('profile', 'default');
-            $query->equal('comment', 'Voucher #' . $voucher->id);
-            $query->equal('limit-uptime', $voucher->plan->duracion_minutos . 'm');
+            $query->equal('profile', $profile);
+            $query->equal('comment', $comment);
+            $query->equal('limit-uptime', $limitUptime);
 
             $client->query($query)->read();
+
+            $createdUser = $this->buscarUsuarioPorCodigo($client, $voucher->codigo);
+            if ($createdUser && isset($createdUser['.id'])) {
+                $voucher->update([
+                    'mikrotik_user_id' => (string) $createdUser['.id'],
+                ]);
+            }
 
             return true;
         } catch (\Throwable $e) {
@@ -61,16 +99,14 @@ class MikrotikService
         try {
             $client = $this->conectar();
 
-            $query = new Query('/ip/hotspot/user/print');
-            $query->where('name', $codigo);
-            $users = $client->query($query)->read();
-
-            if (empty($users)) {
-                return false;
+            $user = $this->buscarUsuarioPorCodigo($client, $codigo);
+            if (! $user) {
+                // Idempotente: si no existe, para efectos de sincronización se considera correcto.
+                return true;
             }
 
             $removeQuery = new Query('/ip/hotspot/user/remove');
-            $removeQuery->equal('.id', $users[0]['.id']);
+            $removeQuery->equal('.id', $user['.id']);
             $client->query($removeQuery)->read();
 
             return true;

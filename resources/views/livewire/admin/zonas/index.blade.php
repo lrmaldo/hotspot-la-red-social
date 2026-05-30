@@ -242,7 +242,20 @@
                                         <input type="password" wire:model="mikrotik_password" placeholder="{{ $zonaId ? 'Dejar vacío para no cambiar' : 'Contraseña' }}" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
                                         @error('mikrotik_password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-green-800">Puerto API</label>
+                                        <input type="number" wire:model="mikrotik_port" min="1" max="65535" placeholder="8728" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
+                                        @error('mikrotik_port') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-green-800">Perfil Hotspot</label>
+                                        <input type="text" wire:model="mikrotik_hotspot_profile" placeholder="default" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
+                                        @error('mikrotik_hotspot_profile') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
                                 </div>
+                                <p class="mt-2 text-xs text-green-900/80">
+                                    Estas credenciales quedan asociadas a esta zona. Si activas venta de vouchers, Usuario API es obligatorio.
+                                </p>
                                 @if($zonaId)
                                     <div class="mt-3">
                                         <button type="button" wire:click="probarConexion({{ $zonaId }})"

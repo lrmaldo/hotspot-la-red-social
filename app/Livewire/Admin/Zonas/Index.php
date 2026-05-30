@@ -38,10 +38,16 @@ class Index extends Component
     public ?string $facebook_url = null;
     public ?string $mikrotik_user = null;
     public ?string $mikrotik_password = null;
+    public ?int $mikrotik_port = 8728;
+    public ?string $mikrotik_hotspot_profile = 'default';
     public bool $is_active = true;
 
     public function rules(): array
     {
+        $zonaActual = $this->zonaId ? Zona::find($this->zonaId) : null;
+        $mikrotikPasswordExiste = $zonaActual?->mikrotik_password !== null;
+        $debePedirPassword = $this->venta_vouchers_activa && (! $this->zonaId || ! $mikrotikPasswordExiste);
+
         return [
             'nombre' => 'required|string|max:150',
             'id_personalizado' => 'required|string|max:100|unique:zonas,id_personalizado,' . $this->zonaId,
@@ -55,8 +61,10 @@ class Index extends Component
             'color_primario' => 'required|string|size:7',
             'color_secundario' => 'required|string|size:7',
             'facebook_url' => 'nullable|url',
-            'mikrotik_user' => 'nullable|string|max:100',
-            'mikrotik_password' => 'nullable|string|max:255',
+            'mikrotik_user' => $this->venta_vouchers_activa ? 'required|string|max:100' : 'nullable|string|max:100',
+            'mikrotik_password' => $debePedirPassword ? 'required|string|max:255' : 'nullable|string|max:255',
+            'mikrotik_port' => 'nullable|integer|min:1|max:65535',
+            'mikrotik_hotspot_profile' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ];
     }
@@ -93,6 +101,8 @@ class Index extends Component
         $this->color_primario = $zona->color_primario;
         $this->color_secundario = $zona->color_secundario;
         $this->facebook_url = $zona->facebook_url;
+        $this->mikrotik_port = $zona->mikrotik_port ?: 8728;
+        $this->mikrotik_hotspot_profile = $zona->mikrotik_hotspot_profile ?: 'default';
         $this->is_active = $zona->is_active;
         $this->showModal = true;
     }
@@ -156,6 +166,7 @@ class Index extends Component
         $this->reset([
             'zonaId', 'nombre', 'id_personalizado', 'descripcion',
             'hotspot_host', 'mikrotik_user', 'mikrotik_password',
+            'mikrotik_port', 'mikrotik_hotspot_profile',
             'logo', 'logo_path', 'facebook_url',
         ]);
         $this->tipo_autenticacion = 'pin';
@@ -164,6 +175,8 @@ class Index extends Component
         $this->trial_duration_seconds = 5;
         $this->color_primario = '#1a56db';
         $this->color_secundario = '#ffffff';
+        $this->mikrotik_port = 8728;
+        $this->mikrotik_hotspot_profile = 'default';
         $this->is_active = true;
         $this->resetValidation();
     }
