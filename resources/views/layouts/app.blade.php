@@ -31,6 +31,9 @@
                     <a href="{{ route('admin.campanas') }}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50 hover:text-blue-600">
                         Campañas
                     </a>
+                    <a href="{{ route('admin.vouchers') }}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50 hover:text-blue-600">
+                        Vouchers
+                    </a>
                     <a href="{{ route('admin.configuracion') }}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50 hover:text-blue-600">
                         Configuración
                     </a>
@@ -54,6 +57,9 @@
                 </a>
                 <a href="{{ route('admin.campanas') }}" class="{{ request()->routeIs('admin.campanas') ? 'bg-gray-100 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
                     Campañas
+                </a>
+                <a href="{{ route('admin.vouchers') }}" class="{{ request()->routeIs('admin.vouchers') ? 'bg-gray-100 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                    Vouchers
                 </a>
                 <a href="{{ route('admin.configuracion') }}" class="{{ request()->routeIs('admin.configuracion') ? 'bg-gray-100 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md">
                     Configuración

@@ -26,6 +26,13 @@
             <option value="expirado">Expirado</option>
         </select>
 
+        <select wire:model.live="filtroMikrotik" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+            <option value="">MikroTik: Todos</option>
+            <option value="ok">MikroTik OK</option>
+            <option value="error">MikroTik Error</option>
+            <option value="pendiente">MikroTik Pendiente</option>
+        </select>
+
         <div class="relative">
             <input type="text" wire:model.live.debounce.300ms="filtroBusqueda" placeholder="Buscar código, email, nombre..."
                    class="border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 w-64">
@@ -46,6 +53,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comprador</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">MikroTik</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha venta</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiración</th>
@@ -82,6 +90,19 @@
                                     {{ ucfirst($v->estado) }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                @php
+                                    $mkClasses = match($v->mikrotik_sync_status) {
+                                        'ok' => 'bg-green-100 text-green-800',
+                                        'error' => 'bg-red-100 text-red-800',
+                                        default => 'bg-gray-100 text-gray-700',
+                                    };
+                                    $mkLabel = $v->mikrotik_sync_status ? strtoupper($v->mikrotik_sync_status) : 'PENDIENTE';
+                                @endphp
+                                <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full {{ $mkClasses }}">
+                                    {{ $mkLabel }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                                 {{ $v->monto_pagado ? '$' . number_format($v->monto_pagado, 2) : '-' }}
                             </td>
@@ -100,6 +121,29 @@
                                     </svg>
                                 </button>
                                 @if($v->estado === 'vendido')
+                                    @if($v->mikrotik_sync_status !== 'ok')
+                                        <button type="button" title="Reintentar sync MikroTik"
+                                                class="text-amber-600 hover:text-amber-900 inline-block p-1 bg-amber-50 rounded hover:bg-amber-100"
+                                                x-data @click="window.Swal.fire({
+                                                    title: '¿Reintentar sincronización?',
+                                                    text: 'Se intentará crear nuevamente el usuario en MikroTik.',
+                                                    icon: 'question',
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#d97706',
+                                                    cancelButtonColor: '#64748b',
+                                                    confirmButtonText: 'Sí, reintentar',
+                                                    cancelButtonText: 'Cancelar'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        @this.reintentarMikrotik({{ $v->id }});
+                                                    }
+                                                })">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </button>
+                                    @endif
+
                                     <button type="button" title="Anular" class="text-red-600 hover:text-red-900 inline-block p-1 bg-red-50 rounded hover:bg-red-100"
                                             x-data @click="window.Swal.fire({
                                                 title: '¿Anular voucher?',
@@ -124,7 +168,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="10" class="px-6 py-12 text-center text-gray-500">
                                 No hay vouchers registrados.
                             </td>
                         </tr>

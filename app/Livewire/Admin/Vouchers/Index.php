@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin\Vouchers;
 
+use App\Models\PagoLog;
 use App\Models\Voucher;
 use App\Models\Zona;
 use App\Services\MikrotikService;
@@ -29,6 +30,9 @@ class Index extends Component
     #[Url(as: 'q')]
     public string $filtroBusqueda = '';
 
+    #[Url(as: 'mk')]
+    public string $filtroMikrotik = '';
+
     public bool $showDetalle = false;
     public ?Voucher $voucherDetalle = null;
 
@@ -47,6 +51,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatedFiltroMikrotik(): void
+    {
+        $this->resetPage();
+    }
+
     public function verDetalle(int $id): void
     {
         $this->voucherDetalle = Voucher::with(['plan', 'zona', 'pagoLogs'])->findOrFail($id);
@@ -61,6 +70,36 @@ class Index extends Component
 
         $mikrotik = new MikrotikService($voucher->zona);
         $mikrotik->eliminarUsuarioHotspot($voucher->codigo);
+    }
+
+    public function reintentarMikrotik(int $id): void
+    {
+        $voucher = Voucher::with(['zona', 'plan'])->findOrFail($id);
+
+        if ($voucher->estado !== 'vendido') {
+            return;
+        }
+
+        $mikrotik = new MikrotikService($voucher->zona);
+        $syncOk = $mikrotik->crearUsuarioHotspot($voucher);
+
+        $voucher->update([
+            'mikrotik_sync_status' => $syncOk ? 'ok' : 'error',
+            'mikrotik_sync_message' => $syncOk
+                ? 'Reintento manual exitoso.'
+                : 'Reintento manual fallido. Revisar conectividad/credenciales.',
+            'mikrotik_synced_at' => $syncOk ? now() : null,
+        ]);
+
+        PagoLog::create([
+            'voucher_id' => $voucher->id,
+            'evento' => 'mikrotik.sync.retry',
+            'monto' => null,
+            'pasarela' => 'mikrotik',
+            'referencia_externa' => (string) $voucher->id,
+            'respuesta_json' => ['result' => $syncOk ? 'ok' : 'error'],
+            'estado' => $syncOk ? 'aprobado' : 'rechazado',
+        ]);
     }
 
     public function exportar(): StreamedResponse
@@ -118,6 +157,14 @@ class Index extends Component
                   ->orWhere('comprador_email', 'like', "%{$search}%")
                   ->orWhere('comprador_nombre', 'like', "%{$search}%");
             });
+        }
+
+        if ($this->filtroMikrotik === 'ok') {
+            $query->where('mikrotik_sync_status', 'ok');
+        } elseif ($this->filtroMikrotik === 'error') {
+            $query->where('mikrotik_sync_status', 'error');
+        } elseif ($this->filtroMikrotik === 'pendiente') {
+            $query->whereNull('mikrotik_sync_status');
         }
 
         return $query;
