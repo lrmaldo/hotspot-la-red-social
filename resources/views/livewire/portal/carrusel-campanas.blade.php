@@ -1112,9 +1112,11 @@
 
                          const response = await fetch(this.$el.dataset.checkoutAccessUrl, {
                              method: 'POST',
+                             credentials: 'same-origin',
                              headers: {
                                  'Content-Type': 'application/json',
                                  'Accept': 'application/json',
+                                 'X-Requested-With': 'XMLHttpRequest',
                                  'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
                              },
                              body: JSON.stringify({
@@ -1123,7 +1125,19 @@
                              }),
                          });
 
-                         const data = await response.json();
+                         const accessRaw = await response.text();
+                         let data = null;
+                         try {
+                             data = JSON.parse(accessRaw);
+                         } catch (e) {
+                             console.error('checkout-access respuesta no JSON', {
+                                 status: response.status,
+                                 sample: accessRaw.slice(0, 500),
+                             });
+                             this.stripeError = 'Respuesta inválida al habilitar acceso temporal (no JSON). Verifica caché de vistas y sesión.';
+                             return false;
+                         }
+
                          if (!response.ok || !data.ok) {
                              this.stripeError = data.message || 'No se pudo habilitar acceso temporal para pago.';
                              return false;
@@ -1211,9 +1225,11 @@
 
                              const intentResponse = await fetch(this.$el.dataset.checkoutIntentUrl, {
                                  method: 'POST',
+                                 credentials: 'same-origin',
                                  headers: {
                                      'Content-Type': 'application/json',
                                      'Accept': 'application/json',
+                                     'X-Requested-With': 'XMLHttpRequest',
                                      'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
                                  },
                                  body: JSON.stringify({
@@ -1225,7 +1241,20 @@
                                  }),
                              });
 
-                             const intentData = await intentResponse.json();
+                             const intentRaw = await intentResponse.text();
+                             let intentData = null;
+                             try {
+                                 intentData = JSON.parse(intentRaw);
+                             } catch (e) {
+                                 console.error('checkout-intent respuesta no JSON', {
+                                     status: intentResponse.status,
+                                     sample: intentRaw.slice(0, 500),
+                                 });
+                                 this.stripeError = 'Respuesta inválida al crear pago (no JSON). Revisa sesión/CSRF o redirección del hotspot.';
+                                 this.paying = false;
+                                 return;
+                             }
+
                              if (!intentResponse.ok || !intentData.client_secret) {
                                  this.stripeError = intentData.message || 'No pudimos iniciar el pago. Intenta de nuevo.';
                                  this.paying = false;
