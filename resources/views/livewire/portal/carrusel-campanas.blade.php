@@ -1266,12 +1266,6 @@
     </div>
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
-        <form name="sendin" action="{{ $link_login_only }}" method="post" style="display:none;">
-            <input type="hidden" name="username" />
-            <input type="hidden" name="password" />
-            <input type="hidden" name="dst" value="{{ $link_orig ?? '' }}" />
-            <input type="hidden" name="popup" value="true" />
-        </form>
         <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>
         <script type="text/javascript">
             function doLogin() {
@@ -1280,9 +1274,30 @@
                     alert('Por favor ingresa tu PIN');
                     return false;
                 }
-                document.sendin.username.value = loginForm.username.value;
-                document.sendin.password.value = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
-                document.sendin.submit();
+                var chapPassword = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
+
+                var sendin = document.createElement('form');
+                sendin.method = 'post';
+                sendin.action = @js($link_login_only);
+                sendin.style.display = 'none';
+
+                var fields = {
+                    username: loginForm.username.value,
+                    password: chapPassword,
+                    dst: @js($link_orig ?? ''),
+                    popup: 'true'
+                };
+
+                Object.keys(fields).forEach(function (key) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    sendin.appendChild(input);
+                });
+
+                document.body.appendChild(sendin);
+                sendin.submit();
                 return false;
             }
         </script>
