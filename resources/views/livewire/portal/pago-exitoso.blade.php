@@ -42,7 +42,8 @@
 
             {{-- Success state --}}
             @elseif($voucher && $voucher->estado === 'vendido')
-                <div class="p-8 text-center" x-data="{ copiado: false }">
+                <div class="p-8 text-center" x-data="{ copiado: false }"
+                     x-init="setTimeout(() => { window.location.href = '{{ route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) . '&auto_submit_pin=1' }}' }, 3500)">
                     {{-- Success icon --}}
                     <div class="flex justify-center mb-5">
                         <div class="w-20 h-20 rounded-full flex items-center justify-center bg-green-100">
@@ -125,11 +126,13 @@
                     @endif
 
                     {{-- Return to portal with PIN prefilled --}}
-                    <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) }}"
+                    <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) . '&auto_submit_pin=1' }}"
                        class="block w-full px-6 py-4 rounded-xl text-white text-center font-bold text-lg hover:opacity-90 transition-opacity"
                        style="background-color: var(--color-primary);">
-                        Volver y canjear mi PIN
+                        Conectarme ahora (PIN automático)
                     </a>
+
+                    <p class="text-xs text-gray-400 mt-3">Te redirigiremos automáticamente al portal para conectar con tu PIN.</p>
                 </div>
 
             {{-- Error state --}}

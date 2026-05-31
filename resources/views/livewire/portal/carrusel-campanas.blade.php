@@ -961,7 +961,7 @@
                 <div class="auth-title">Acceder a Internet</div>
 
                 <div class="auth-form">
-                    <form name="login" action="{{ $link_login_only }}" method="post" onSubmit="return doLogin()">
+                    <form id="hotspot-login-form" name="login" action="{{ $link_login_only }}" method="post" onSubmit="return doLogin()">
                         <input type="hidden" name="dst" value="{{ $link_orig ?? '' }}" />
                         <input type="hidden" name="popup" value="true" />
 
@@ -1332,7 +1332,8 @@
                                      this.paying = false;
                                      return;
                                  }
-                                 window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id);
+                                 const hotspotIpQs = hotspotIp ? '&hotspot_ip=' + encodeURIComponent(hotspotIp) : '';
+                                 window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id) + hotspotIpQs;
                                  return;
                              }
 
@@ -1541,6 +1542,9 @@
                     alert('Por favor ingresa tu PIN');
                     return false;
                 }
+                if (!loginForm.password.value) {
+                    loginForm.password.value = loginForm.username.value;
+                }
                 var chapPassword = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
 
                 var sendin = document.createElement('form');
@@ -1577,6 +1581,21 @@
                 }
                 return true;
             }
+        </script>
+    @endif
+
+    @if(request()->query('auto_submit_pin') === '1' && request()->query('prefill_pin'))
+        <script>
+            setTimeout(function () {
+                var form = document.getElementById('hotspot-login-form');
+                var username = document.getElementById('username');
+
+                if (!form || !username || !username.value.trim()) {
+                    return;
+                }
+
+                form.requestSubmit();
+            }, 900);
         </script>
     @endif
 

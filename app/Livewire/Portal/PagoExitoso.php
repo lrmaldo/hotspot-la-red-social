@@ -25,6 +25,8 @@ class PagoExitoso extends Component
     public ?Voucher $voucher = null;
     public string $sessionId = '';
     public string $paymentIntentId = '';
+    public string $hotspotIp = '';
+    public bool $bypassRevocado = false;
     public int $intentos = 0;
     public bool $procesando = true;
 
@@ -33,6 +35,7 @@ class PagoExitoso extends Component
         $this->zona = $zona;
         $this->sessionId = request()->get('session_id', '');
         $this->paymentIntentId = request()->get('payment_intent', '');
+        $this->hotspotIp = request()->get('hotspot_ip', request()->session()->get('hotspot.ip', ''));
         $this->cargarVoucher();
     }
 
@@ -55,6 +58,7 @@ class PagoExitoso extends Component
         }
 
         if ($this->voucher && $this->voucher->estado === 'vendido') {
+            $this->revocarBypassTemporalSiAplica();
             $this->procesando = false;
         } else {
             $this->intentos++;
@@ -135,6 +139,25 @@ class PagoExitoso extends Component
                 'zona_id' => $this->zona->id,
                 'payment_intent' => $this->paymentIntentId,
                 'voucher_id' => $this->voucher->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function revocarBypassTemporalSiAplica(): void
+    {
+        if ($this->bypassRevocado || $this->hotspotIp === '' || ! $this->voucher) {
+            return;
+        }
+
+        try {
+            (new MikrotikService($this->voucher->zona))->revocarAccesoPagoTemporal($this->hotspotIp);
+            $this->bypassRevocado = true;
+        } catch (\Throwable $e) {
+            Log::warning('PagoExitoso: no se pudo revocar bypass temporal', [
+                'zona_id' => $this->zona->id,
+                'voucher_id' => $this->voucher->id,
+                'hotspot_ip' => $this->hotspotIp,
                 'error' => $e->getMessage(),
             ]);
         }
