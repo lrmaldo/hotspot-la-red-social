@@ -1363,7 +1363,7 @@
         </div>
     </div>
     @if(isset($zona) && $zona->venta_vouchers_activa)
-        <script src="{{ route('stripe.js.proxy') }}"></script>
+        <script src="https://js.stripe.com/v3/"></script>
     @endif
 
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
