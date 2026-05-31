@@ -1097,6 +1097,52 @@
                          if (mins < 10080) { let d = Math.floor(mins/1440); return d + (d===1?' día':' días'); }
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
                      },
+                     buildFallbackEndpoint(action) {
+                         const match = window.location.pathname.match(/\/portal\/([^/?#]+)/);
+                         if (!match || !match[1]) {
+                             return null;
+                         }
+
+                         return window.location.origin + '/portal/' + match[1] + '/' + action;
+                     },
+                     async postJsonWithFallback(url, payload, label, fallbackAction) {
+                         const doRequest = async (targetUrl) => {
+                             const response = await fetch(targetUrl, {
+                                 method: 'POST',
+                                 credentials: 'same-origin',
+                                 headers: {
+                                     'Content-Type': 'application/json',
+                                     'Accept': 'application/json',
+                                     'X-Requested-With': 'XMLHttpRequest',
+                                     'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
+                                 },
+                                 body: JSON.stringify(payload),
+                             });
+
+                             const raw = await response.text();
+                             let json = null;
+
+                             try {
+                                 json = JSON.parse(raw);
+                             } catch (e) {
+                                 return { ok: false, response, raw, json: null };
+                             }
+
+                             return { ok: true, response, raw, json };
+                         };
+
+                         let result = await doRequest(url);
+
+                         if (!result.ok && result.raw && result.raw.includes('Zona No Encontrada')) {
+                             const fallbackUrl = this.buildFallbackEndpoint(fallbackAction);
+                             if (fallbackUrl && fallbackUrl !== url) {
+                                 console.warn(label + ' fallback URL', { from: url, to: fallbackUrl });
+                                 result = await doRequest(fallbackUrl);
+                             }
+                         }
+
+                         return result;
+                     },
                      async ensureHotspotPaymentAccess() {
                          if (this.accessReady) {
                              return true;
@@ -1105,33 +1151,27 @@
                          const hotspotIp = this.$el.dataset.hotspotIp || null;
                          const hotspotMac = this.$el.dataset.hotspotMac || null;
 
-                         const response = await fetch(this.$el.dataset.checkoutAccessUrl, {
-                             method: 'POST',
-                             credentials: 'same-origin',
-                             headers: {
-                                 'Content-Type': 'application/json',
-                                 'Accept': 'application/json',
-                                 'X-Requested-With': 'XMLHttpRequest',
-                                 'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
-                             },
-                             body: JSON.stringify({
+                         const accessResult = await this.postJsonWithFallback(
+                             this.$el.dataset.checkoutAccessUrl,
+                             {
                                  hotspot_ip: hotspotIp,
                                  hotspot_mac: hotspotMac,
-                             }),
-                         });
+                             },
+                             'checkout-access',
+                             'checkout-access'
+                         );
 
-                         const accessRaw = await response.text();
-                         let data = null;
-                         try {
-                             data = JSON.parse(accessRaw);
-                         } catch (e) {
+                         if (!accessResult.ok) {
                              console.error('checkout-access respuesta no JSON', {
-                                 status: response.status,
-                                 sample: accessRaw.slice(0, 500),
+                                 status: accessResult.response.status,
+                                 sample: accessResult.raw.slice(0, 500),
                              });
-                             this.stripeError = 'Respuesta inválida al habilitar acceso temporal (no JSON). Verifica caché de vistas y sesión.';
+                             this.stripeError = 'Respuesta inválida al habilitar acceso temporal (no JSON). Verifica URL de portal y caché.';
                              return false;
                          }
+
+                         const response = accessResult.response;
+                         const data = accessResult.json;
 
                          if (!response.ok || !data.ok) {
                              this.stripeError = data.message || 'No se pudo habilitar acceso temporal para pago.';
@@ -1222,37 +1262,31 @@
                              const hotspotIp = this.$el.dataset.hotspotIp || null;
                              const hotspotMac = this.$el.dataset.hotspotMac || null;
 
-                             const intentResponse = await fetch(this.$el.dataset.checkoutIntentUrl, {
-                                 method: 'POST',
-                                 credentials: 'same-origin',
-                                 headers: {
-                                     'Content-Type': 'application/json',
-                                     'Accept': 'application/json',
-                                     'X-Requested-With': 'XMLHttpRequest',
-                                     'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
-                                 },
-                                 body: JSON.stringify({
+                             const intentResult = await this.postJsonWithFallback(
+                                 this.$el.dataset.checkoutIntentUrl,
+                                 {
                                      plan_id: this.planSel.id,
                                      compra_email: this.compraEmail,
                                      compra_nombre: this.compraNombre,
                                      hotspot_ip: hotspotIp,
                                      hotspot_mac: hotspotMac,
-                                 }),
-                             });
+                                 },
+                                 'checkout-intent',
+                                 'checkout-intent'
+                             );
 
-                             const intentRaw = await intentResponse.text();
-                             let intentData = null;
-                             try {
-                                 intentData = JSON.parse(intentRaw);
-                             } catch (e) {
+                             if (!intentResult.ok) {
                                  console.error('checkout-intent respuesta no JSON', {
-                                     status: intentResponse.status,
-                                     sample: intentRaw.slice(0, 500),
+                                     status: intentResult.response.status,
+                                     sample: intentResult.raw.slice(0, 500),
                                  });
-                                 this.stripeError = 'Respuesta inválida al crear pago (no JSON). Revisa sesión/CSRF o redirección del hotspot.';
+                                 this.stripeError = 'Respuesta inválida al crear pago (no JSON). Revisa URL de portal y caché.';
                                  this.paying = false;
                                  return;
                              }
+
+                             const intentResponse = intentResult.response;
+                             const intentData = intentResult.json;
 
                              if (!intentResponse.ok || !intentData.client_secret) {
                                  this.stripeError = intentData.message || 'No pudimos iniciar el pago. Intenta de nuevo.';
