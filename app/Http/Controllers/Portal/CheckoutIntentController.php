@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Voucher;
 use App\Models\Zona;
+use App\Services\MikrotikService;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class CheckoutIntentController extends Controller
             'plan_id' => ['required', 'integer', 'exists:planes,id'],
             'compra_email' => ['nullable', 'email'],
             'compra_nombre' => ['nullable', 'string', 'max:120'],
+            'hotspot_ip' => ['nullable', 'ip'],
+            'hotspot_mac' => ['nullable', 'string', 'max:64'],
         ]);
 
         $plan = Plan::where('id', $data['plan_id'])
@@ -41,8 +44,15 @@ class CheckoutIntentController extends Controller
             'comprador_email' => $data['compra_email'] ?: null,
         ]);
 
+        $hotspotIp = $data['hotspot_ip'] ?? null;
+        $hotspotMac = $data['hotspot_mac'] ?? null;
+
+        if ($hotspotIp) {
+            (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
+        }
+
         try {
-            $intent = (new StripeService())->crearPaymentIntent($plan, $zona, $voucher);
+            $intent = (new StripeService())->crearPaymentIntent($plan, $zona, $voucher, $hotspotIp, $hotspotMac);
         } catch (\Throwable $e) {
             Log::error('Checkout Stripe Elements: no se pudo crear payment_intent', [
                 'zona_id' => $zona->id,

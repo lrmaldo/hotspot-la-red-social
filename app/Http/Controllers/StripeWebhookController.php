@@ -77,6 +77,8 @@ class StripeWebhookController
             (string) ($session->payment_intent ?? ''),
             'checkout.session.completed',
         );
+
+        $this->revocarAccesoTemporalDePago($voucher, (string) ($session->metadata->hotspot_ip ?? ''));
     }
 
     private function handlePaymentIntentSucceeded(object $paymentIntent): void
@@ -102,6 +104,8 @@ class StripeWebhookController
             (string) $paymentIntent->id,
             'payment_intent.succeeded',
         );
+
+        $this->revocarAccesoTemporalDePago($voucher, (string) ($paymentIntent->metadata->hotspot_ip ?? ''));
     }
 
     private function handlePaymentIntentFailed(object $paymentIntent): void
@@ -132,6 +136,26 @@ class StripeWebhookController
             'respuesta_json' => (array) $paymentIntent,
             'estado' => 'rechazado',
         ]);
+
+        $this->revocarAccesoTemporalDePago($voucher, (string) ($paymentIntent->metadata->hotspot_ip ?? ''));
+    }
+
+    private function revocarAccesoTemporalDePago(Voucher $voucher, ?string $hotspotIp): void
+    {
+        if (! $hotspotIp) {
+            return;
+        }
+
+        try {
+            (new MikrotikService($voucher->zona))->revocarAccesoPagoTemporal($hotspotIp);
+        } catch (\Throwable $e) {
+            Log::warning('Stripe webhook: no se pudo revocar acceso temporal de pago', [
+                'voucher_id' => $voucher->id,
+                'zona_id' => $voucher->zona_id,
+                'hotspot_ip' => $hotspotIp,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function finalizarVoucherPagado(

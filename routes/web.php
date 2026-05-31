@@ -10,6 +10,7 @@ use App\Livewire\Portal\CarruselCampanas;
 use App\Livewire\Portal\CompraPlan;
 use App\Livewire\Portal\PagoExitoso;
 use App\Livewire\Portal\PinLogin;
+use App\Http\Controllers\Portal\CheckoutAccessController;
 use App\Http\Controllers\Portal\CheckoutController;
 use App\Http\Controllers\Portal\CheckoutIntentController;
 
@@ -36,6 +37,9 @@ Route::post('/portal/{zona:id_personalizado}/checkout', CheckoutController::clas
 
 Route::post('/portal/{zona:id_personalizado}/checkout-intent', CheckoutIntentController::class)
     ->name('portal.checkout-intent');
+
+Route::post('/portal/{zona:id_personalizado}/checkout-access', CheckoutAccessController::class)
+    ->name('portal.checkout-access');
 
 // Alias for portal.zona (used in emails/views)
 Route::get('/portal/{zona:id_personalizado}/zona', CarruselCampanas::class)

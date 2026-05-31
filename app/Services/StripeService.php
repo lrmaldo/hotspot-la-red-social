@@ -58,7 +58,13 @@ class StripeService
         return $this->stripe->checkout->sessions->retrieve($sessionId);
     }
 
-    public function crearPaymentIntent(Plan $plan, Zona $zona, Voucher $voucher): PaymentIntent
+    public function crearPaymentIntent(
+        Plan $plan,
+        Zona $zona,
+        Voucher $voucher,
+        ?string $hotspotIp = null,
+        ?string $hotspotMac = null,
+    ): PaymentIntent
     {
         $intentData = [
             'amount' => (int) ($plan->precio * 100),
@@ -69,6 +75,8 @@ class StripeService
                 'voucher_id' => (string) $voucher->id,
                 'zona_id' => (string) $zona->id,
                 'plan_id' => (string) $plan->id,
+                'hotspot_ip' => (string) ($hotspotIp ?? ''),
+                'hotspot_mac' => (string) ($hotspotMac ?? ''),
             ],
         ];
 

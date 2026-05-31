@@ -1078,6 +1078,7 @@
                      stripe: null,
                      elements: null,
                      card: null,
+                     accessReady: false,
                      stripeError: '',
                      paying: false,
                      selectPlan(planId, nombre, precio, duracion) {
@@ -1096,12 +1097,80 @@
                          if (mins < 10080) { let d = Math.floor(mins/1440); return d + (d===1?' día':' días'); }
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
                      },
-                     mountStripeCard() {
+                     async ensureHotspotPaymentAccess() {
+                         if (this.accessReady) {
+                             return true;
+                         }
+
+                         const hotspotIp = @js($ip ?? null);
+                         const hotspotMac = @js($mac ?? null);
+
+                         if (!hotspotIp) {
+                             this.stripeError = 'No se detectó la IP del hotspot para iniciar el pago.';
+                             return false;
+                         }
+
+                         const response = await fetch(@js(route('portal.checkout-access', $zona)), {
+                             method: 'POST',
+                             headers: {
+                                 'Content-Type': 'application/json',
+                                 'Accept': 'application/json',
+                                 'X-CSRF-TOKEN': @js(csrf_token()),
+                             },
+                             body: JSON.stringify({
+                                 hotspot_ip: hotspotIp,
+                                 hotspot_mac: hotspotMac,
+                             }),
+                         });
+
+                         const data = await response.json();
+                         if (!response.ok || !data.ok) {
+                             this.stripeError = data.message || 'No se pudo habilitar acceso temporal para pago.';
+                             return false;
+                         }
+
+                         this.accessReady = true;
+                         return true;
+                     },
+                     async ensureStripeLoaded() {
+                         if (window.Stripe) {
+                             return true;
+                         }
+
+                         await new Promise((resolve, reject) => {
+                             let script = document.querySelector('script[data-stripe-js="1"]');
+                             if (!script) {
+                                 script = document.createElement('script');
+                                 script.src = 'https://js.stripe.com/v3/';
+                                 script.async = true;
+                                 script.defer = true;
+                                 script.dataset.stripeJs = '1';
+                                 document.head.appendChild(script);
+                             }
+
+                             script.addEventListener('load', () => resolve(true), { once: true });
+                             script.addEventListener('error', () => reject(new Error('stripe_load_error')), { once: true });
+
+                             if (window.Stripe) {
+                                 resolve(true);
+                             }
+                         });
+
+                         return !!window.Stripe;
+                     },
+                     async mountStripeCard() {
                          if (this.card || !this.$refs.cardElement) {
                              return;
                          }
 
-                         if (!window.Stripe) {
+                         const accessOk = await this.ensureHotspotPaymentAccess();
+                         if (!accessOk) {
+                             return;
+                         }
+
+                         try {
+                             await this.ensureStripeLoaded();
+                         } catch (error) {
                              this.stripeError = 'No pudimos cargar Stripe. Intenta recargar la página.';
                              return;
                          }
@@ -1129,7 +1198,13 @@
                          this.paying = true;
 
                          try {
-                             this.mountStripeCard();
+                             await this.mountStripeCard();
+
+                             if (!this.card) {
+                                 this.stripeError = this.stripeError || 'No se pudo preparar el formulario de tarjeta.';
+                                 this.paying = false;
+                                 return;
+                             }
 
                              const intentResponse = await fetch(@js(route('portal.checkout-intent', $zona)), {
                                  method: 'POST',
@@ -1142,6 +1217,8 @@
                                      plan_id: this.planSel.id,
                                      compra_email: this.compraEmail,
                                      compra_nombre: this.compraNombre,
+                                     hotspot_ip: @js($ip ?? null),
+                                     hotspot_mac: @js($mac ?? null),
                                  }),
                              });
 
@@ -1182,7 +1259,7 @@
                          }
                      }
                  }"
-                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false"
+                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false; accessReady = false; if(card){ card.destroy(); card = null; elements = null; stripe = null; }"
              @click.stop
              class="compra-modal" 
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
@@ -1362,10 +1439,6 @@
             </div>
         </div>
     </div>
-    @if(isset($zona) && $zona->venta_vouchers_activa)
-        <script src="https://js.stripe.com/v3/"></script>
-    @endif
-
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>

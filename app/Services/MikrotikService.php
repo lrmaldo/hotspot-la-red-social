@@ -12,6 +12,46 @@ use RouterOS\Query;
 
 class MikrotikService
 {
+    private const TEMP_PAY_COMMENT_PREFIX = 'PAY-TEMP';
+
+    private function limpiarAccesosTemporalesExpirados(Client $client): void
+    {
+        try {
+            $query = new Query('/ip/hotspot/ip-binding/print');
+            $bindings = $client->query($query)->read();
+
+            foreach ($bindings as $binding) {
+                $comment = (string) ($binding['comment'] ?? '');
+                if (! str_starts_with($comment, self::TEMP_PAY_COMMENT_PREFIX)) {
+                    continue;
+                }
+
+                $matches = [];
+                if (! preg_match('/\|exp=([^|]+)$/', $comment, $matches)) {
+                    continue;
+                }
+
+                $expira = \Carbon\Carbon::parse($matches[1]);
+                if ($expira->isFuture()) {
+                    continue;
+                }
+
+                if (! isset($binding['.id'])) {
+                    continue;
+                }
+
+                $removeQuery = new Query('/ip/hotspot/ip-binding/remove');
+                $removeQuery->equal('.id', $binding['.id']);
+                $client->query($removeQuery)->read();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('MikroTik: no se pudieron limpiar accesos temporales expirados', [
+                'zona_id' => $this->zona->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     public function __construct(private Zona $zona)
     {
     }
@@ -134,6 +174,106 @@ class MikrotikService
             Log::error('MikroTik: error al verificar conexión', [
                 'zona_id' => $this->zona->id,
                 'error'   => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function buscarBindingTemporalPorIp(Client $client, string $ip): ?array
+    {
+        $query = new Query('/ip/hotspot/ip-binding/print');
+        $query->where('address', $ip);
+        $bindings = $client->query($query)->read();
+
+        if (empty($bindings)) {
+            return null;
+        }
+
+        foreach ($bindings as $binding) {
+            $comment = (string) ($binding['comment'] ?? '');
+            if (str_starts_with($comment, self::TEMP_PAY_COMMENT_PREFIX)) {
+                return $binding;
+            }
+        }
+
+        return null;
+    }
+
+    public function habilitarAccesoPagoTemporal(?string $ip, ?string $mac = null, int $minutos = 10): bool
+    {
+        if (! $ip) {
+            return false;
+        }
+
+        try {
+            $client = $this->conectar();
+            $this->limpiarAccesosTemporalesExpirados($client);
+            $expiraEn = now()->addMinutes(max(1, $minutos))->toDateTimeString();
+            $comment = sprintf('%s|ip=%s|exp=%s', self::TEMP_PAY_COMMENT_PREFIX, $ip, $expiraEn);
+
+            $binding = $this->buscarBindingTemporalPorIp($client, $ip);
+
+            if ($binding) {
+                $setQuery = new Query('/ip/hotspot/ip-binding/set');
+                $setQuery->equal('.id', $binding['.id']);
+                $setQuery->equal('type', 'bypassed');
+                $setQuery->equal('comment', $comment);
+                if ($mac) {
+                    $setQuery->equal('mac-address', $mac);
+                }
+                $client->query($setQuery)->read();
+
+                return true;
+            }
+
+            $addQuery = new Query('/ip/hotspot/ip-binding/add');
+            $addQuery->equal('address', $ip);
+            $addQuery->equal('type', 'bypassed');
+            $addQuery->equal('comment', $comment);
+            if ($mac) {
+                $addQuery->equal('mac-address', $mac);
+            }
+
+            $client->query($addQuery)->read();
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('MikroTik: error al habilitar acceso temporal de pago', [
+                'zona_id' => $this->zona->id,
+                'ip' => $ip,
+                'mac' => $mac,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    public function revocarAccesoPagoTemporal(?string $ip): bool
+    {
+        if (! $ip) {
+            return true;
+        }
+
+        try {
+            $client = $this->conectar();
+            $binding = $this->buscarBindingTemporalPorIp($client, $ip);
+
+            if (! $binding) {
+                return true;
+            }
+
+            $removeQuery = new Query('/ip/hotspot/ip-binding/remove');
+            $removeQuery->equal('.id', $binding['.id']);
+            $client->query($removeQuery)->read();
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('MikroTik: error al revocar acceso temporal de pago', [
+                'zona_id' => $this->zona->id,
+                'ip' => $ip,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
