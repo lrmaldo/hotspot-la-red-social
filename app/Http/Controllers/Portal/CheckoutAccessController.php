@@ -27,15 +27,25 @@ class CheckoutAccessController extends Controller
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
 
-        if (! $hotspotIp) {
+        if (! $hotspotIp && ! $hotspotMac) {
             return response()->json([
                 'ok' => false,
-                'message' => 'No se detectó la IP del cliente para habilitar acceso temporal.',
+                'message' => 'No se detectó IP ni MAC del cliente para habilitar acceso temporal.',
+            ], 422);
+        }
+
+        $mikrotik = new MikrotikService($zona);
+        $resolvedIp = $mikrotik->resolverIpParaPagoTemporal($hotspotIp, $hotspotMac);
+
+        if (! $resolvedIp) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se pudo resolver la IP del cliente en el hotspot.',
             ], 422);
         }
 
         try {
-            $ok = (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
+            $ok = $mikrotik->habilitarAccesoPagoTemporal($resolvedIp, $hotspotMac, 10);
 
             if (! $ok) {
                 return response()->json([
@@ -46,12 +56,12 @@ class CheckoutAccessController extends Controller
 
             return response()->json([
                 'ok' => true,
-                'hotspot_ip' => $hotspotIp,
+                'hotspot_ip' => $resolvedIp,
             ]);
         } catch (\Throwable $e) {
             Log::error('Checkout access temporal: error al habilitar acceso en MikroTik', [
                 'zona_id' => $zona->id,
-                'hotspot_ip' => $hotspotIp,
+                'hotspot_ip' => $resolvedIp,
                 'hotspot_mac' => $hotspotMac,
                 'error' => $e->getMessage(),
             ]);

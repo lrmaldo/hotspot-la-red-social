@@ -14,6 +14,39 @@ class MikrotikService
 {
     private const TEMP_PAY_COMMENT_PREFIX = 'PAY-TEMP';
 
+    private function normalizarMac(string $mac): string
+    {
+        return strtoupper(trim($mac));
+    }
+
+    private function resolverIpClienteHotspot(Client $client, ?string $ip, ?string $mac): ?string
+    {
+        if (! empty($ip)) {
+            return $ip;
+        }
+
+        if (empty($mac)) {
+            return null;
+        }
+
+        $query = new Query('/ip/hotspot/host/print');
+        $query->where('mac-address', $this->normalizarMac($mac));
+        $hosts = $client->query($query)->read();
+
+        if (empty($hosts)) {
+            return null;
+        }
+
+        foreach ($hosts as $host) {
+            $address = $host['address'] ?? null;
+            if (! empty($address)) {
+                return (string) $address;
+            }
+        }
+
+        return null;
+    }
+
     private function limpiarAccesosTemporalesExpirados(Client $client): void
     {
         try {
@@ -202,17 +235,19 @@ class MikrotikService
 
     public function habilitarAccesoPagoTemporal(?string $ip, ?string $mac = null, int $minutos = 10): bool
     {
-        if (! $ip) {
-            return false;
-        }
-
         try {
             $client = $this->conectar();
             $this->limpiarAccesosTemporalesExpirados($client);
-            $expiraEn = now()->addMinutes(max(1, $minutos))->toDateTimeString();
-            $comment = sprintf('%s|ip=%s|exp=%s', self::TEMP_PAY_COMMENT_PREFIX, $ip, $expiraEn);
+            $resolvedIp = $this->resolverIpClienteHotspot($client, $ip, $mac);
 
-            $binding = $this->buscarBindingTemporalPorIp($client, $ip);
+            if (! $resolvedIp) {
+                return false;
+            }
+
+            $expiraEn = now()->addMinutes(max(1, $minutos))->toDateTimeString();
+            $comment = sprintf('%s|ip=%s|exp=%s', self::TEMP_PAY_COMMENT_PREFIX, $resolvedIp, $expiraEn);
+
+            $binding = $this->buscarBindingTemporalPorIp($client, $resolvedIp);
 
             if ($binding) {
                 $setQuery = new Query('/ip/hotspot/ip-binding/set');
@@ -228,11 +263,11 @@ class MikrotikService
             }
 
             $addQuery = new Query('/ip/hotspot/ip-binding/add');
-            $addQuery->equal('address', $ip);
+            $addQuery->equal('address', $resolvedIp);
             $addQuery->equal('type', 'bypassed');
             $addQuery->equal('comment', $comment);
             if ($mac) {
-                $addQuery->equal('mac-address', $mac);
+                $addQuery->equal('mac-address', $this->normalizarMac($mac));
             }
 
             $client->query($addQuery)->read();
@@ -247,6 +282,23 @@ class MikrotikService
             ]);
 
             return false;
+        }
+    }
+
+    public function resolverIpParaPagoTemporal(?string $ip, ?string $mac = null): ?string
+    {
+        try {
+            $client = $this->conectar();
+            return $this->resolverIpClienteHotspot($client, $ip, $mac);
+        } catch (\Throwable $e) {
+            Log::warning('MikroTik: no se pudo resolver IP para pago temporal', [
+                'zona_id' => $this->zona->id,
+                'ip' => $ip,
+                'mac' => $mac,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $ip;
         }
     }
 

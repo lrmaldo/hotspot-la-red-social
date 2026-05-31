@@ -47,7 +47,7 @@ class CheckoutIntentController extends Controller
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
 
-        if ($hotspotIp) {
+        if ($hotspotIp || $hotspotMac) {
             (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
         }
 

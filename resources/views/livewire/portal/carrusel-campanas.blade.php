@@ -1105,8 +1105,8 @@
                          const hotspotIp = this.$el.dataset.hotspotIp || null;
                          const hotspotMac = this.$el.dataset.hotspotMac || null;
 
-                         if (!hotspotIp) {
-                             this.stripeError = 'No se detectó la IP del hotspot para iniciar el pago.';
+                         if (!hotspotIp && !hotspotMac) {
+                             this.stripeError = 'No se detectó IP ni MAC del hotspot para iniciar el pago.';
                              return false;
                          }
 
@@ -1141,6 +1141,10 @@
                          if (!response.ok || !data.ok) {
                              this.stripeError = data.message || 'No se pudo habilitar acceso temporal para pago.';
                              return false;
+                         }
+
+                         if (data.hotspot_ip) {
+                             this.$el.dataset.hotspotIp = data.hotspot_ip;
                          }
 
                          this.accessReady = true;
