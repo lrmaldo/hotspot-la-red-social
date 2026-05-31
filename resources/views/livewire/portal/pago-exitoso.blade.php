@@ -125,7 +125,7 @@
                     @endif
 
                     {{-- Return to portal with PIN prefilled --}}
-                    <a href="{{ route('portal.zona', $zona) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) }}"
+                    <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=ok&prefill_pin=' . urlencode($voucher->codigo) }}"
                        class="block w-full px-6 py-4 rounded-xl text-white text-center font-bold text-lg hover:opacity-90 transition-opacity"
                        style="background-color: var(--color-primary);">
                         Volver y canjear mi PIN
@@ -150,7 +150,7 @@
                     </p>
 
                     <div class="flex flex-col gap-3">
-                        <a href="{{ route('portal.zona', $zona) }}"
+                        <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) }}"
                            class="block w-full px-6 py-3 rounded-lg text-white text-center font-medium hover:opacity-90 transition-opacity"
                            style="background-color: var(--color-primary);">
                             Volver al portal
@@ -162,7 +162,7 @@
 
         {{-- Footer --}}
         <div class="text-center mt-4">
-            <a href="{{ route('portal.zona', $zona) }}" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) }}" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Volver al portal
             </a>
         </div>

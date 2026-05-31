@@ -23,7 +23,7 @@ gracias por tu compra en **{{ $voucher->zona->nombre }}**.
 @endif
 **Expira:** {{ $voucher->fecha_expiracion->format('d/m/Y H:i') }}
 
-@component('mail::button', ['url' => route('portal.zona', $voucher->zona)])
+@component('mail::button', ['url' => route('portal.zona', ['zona' => $voucher->zona->id_personalizado])])
 Ir al portal WiFi
 @endcomponent
 

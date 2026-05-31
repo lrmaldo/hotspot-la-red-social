@@ -35,8 +35,8 @@ class StripeService
                 ],
                 'quantity' => 1,
             ]],
-            'success_url'    => route('portal.pago-exitoso', $zona) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'     => route('portal.zona', $zona) . '?checkout=cancelado',
+            'success_url'    => route('portal.pago-exitoso', ['zona' => $zona->id_personalizado]) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url'     => route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=cancelado',
             'metadata'       => [
                 'voucher_id' => (string) $voucher->id,
                 'zona_id'    => (string) $zona->id,

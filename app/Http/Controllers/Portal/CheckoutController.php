@@ -53,7 +53,7 @@ class CheckoutController extends Controller
 
             $voucher->update(['estado' => 'pendiente']);
 
-            return redirect()->to(route('portal.zona', $zona) . '?checkout=error');
+            return redirect()->to(route('portal.zona', ['zona' => $zona->id_personalizado]) . '?checkout=error');
         }
 
         return redirect()->away($url);

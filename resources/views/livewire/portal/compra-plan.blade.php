@@ -208,7 +208,7 @@
 
         {{-- Back to portal link --}}
         <div class="text-center mt-4">
-            <a href="{{ route('portal.zona', $zona) }}" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            <a href="{{ route('portal.zona', ['zona' => $zona->id_personalizado]) }}" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Volver al portal
             </a>
         </div>

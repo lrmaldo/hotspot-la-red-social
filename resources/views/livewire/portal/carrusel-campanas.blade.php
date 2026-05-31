@@ -1295,9 +1295,9 @@
              class="compra-modal" 
              data-hotspot-ip="{{ $ip ?? '' }}"
              data-hotspot-mac="{{ $mac ?? '' }}"
-             data-checkout-access-url="{{ route('portal.checkout-access', $zona) }}"
-             data-checkout-intent-url="{{ route('portal.checkout-intent', $zona) }}"
-             data-pago-exitoso-url="{{ route('portal.pago-exitoso', $zona) }}"
+             data-checkout-access-url="{{ route('portal.checkout-access', ['zona' => $zona->id_personalizado]) }}"
+             data-checkout-intent-url="{{ route('portal.checkout-intent', ['zona' => $zona->id_personalizado]) }}"
+             data-pago-exitoso-url="{{ route('portal.pago-exitoso', ['zona' => $zona->id_personalizado]) }}"
              data-csrf-token="{{ csrf_token() }}"
              data-stripe-key="{{ config('services.stripe.key') }}"
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
