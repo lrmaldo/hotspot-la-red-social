@@ -1105,11 +1105,6 @@
                          const hotspotIp = this.$el.dataset.hotspotIp || null;
                          const hotspotMac = this.$el.dataset.hotspotMac || null;
 
-                         if (!hotspotIp && !hotspotMac) {
-                             this.stripeError = 'No se detectó IP ni MAC del hotspot para iniciar el pago.';
-                             return false;
-                         }
-
                          const response = await fetch(this.$el.dataset.checkoutAccessUrl, {
                              method: 'POST',
                              credentials: 'same-origin',

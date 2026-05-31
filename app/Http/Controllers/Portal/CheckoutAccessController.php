@@ -27,6 +27,16 @@ class CheckoutAccessController extends Controller
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
 
+        if (! $hotspotIp) {
+            $hotspotIp = (string) $request->session()->get('hotspot.ip', '');
+            $hotspotIp = $hotspotIp !== '' ? $hotspotIp : null;
+        }
+
+        if (! $hotspotMac) {
+            $hotspotMac = (string) $request->session()->get('hotspot.mac', '');
+            $hotspotMac = $hotspotMac !== '' ? $hotspotMac : null;
+        }
+
         if (! $hotspotIp && ! $hotspotMac) {
             return response()->json([
                 'ok' => false,

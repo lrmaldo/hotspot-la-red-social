@@ -54,8 +54,8 @@ class CarruselCampanas extends Component
         }
         #dd($request->all());
         // Si se recibe por POST (o GET), capturamos los parámetros de MikroTik
-        $this->mac = $request->input('mac', $this->mac);
-        $this->ip = $request->input('ip', $this->ip);
+        $this->mac = $request->input('mac') ?: $request->session()->get('hotspot.mac', $this->mac);
+        $this->ip = $request->input('ip') ?: $request->session()->get('hotspot.ip', $this->ip);
         $this->username = $request->input('username', $this->username);
         $this->link_login = $request->input('link-login', $this->link_login);
         $this->link_orig = $request->input('link-orig', $this->link_orig);
@@ -65,6 +65,13 @@ class CarruselCampanas extends Component
         $this->link_login_only = $request->input('link-login-only', $this->link_login_only);
         $this->link_orig_esc = $request->input('link-orig-esc', $this->link_orig_esc);
         $this->mac_esc = $request->input('mac-esc', $this->mac_esc);
+
+        if ($this->ip) {
+            $request->session()->put('hotspot.ip', $this->ip);
+        }
+        if ($this->mac) {
+            $request->session()->put('hotspot.mac', $this->mac);
+        }
 
         $this->zona = $zona;
 
