@@ -1152,7 +1152,7 @@
                          }
 
                          await new Promise((resolve, reject) => {
-                             let script = document.querySelector('script[data-stripe-js="1"]');
+                             let script = document.querySelector('script[data-stripe-js=\'1\']');
                              if (!script) {
                                  script = document.createElement('script');
                                  script.src = 'https://js.stripe.com/v3/';
