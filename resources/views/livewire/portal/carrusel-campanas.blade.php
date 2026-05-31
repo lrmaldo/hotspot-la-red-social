@@ -1102,20 +1102,20 @@
                              return true;
                          }
 
-                         const hotspotIp = @js($ip ?? null);
-                         const hotspotMac = @js($mac ?? null);
+                         const hotspotIp = this.$el.dataset.hotspotIp || null;
+                         const hotspotMac = this.$el.dataset.hotspotMac || null;
 
                          if (!hotspotIp) {
                              this.stripeError = 'No se detectó la IP del hotspot para iniciar el pago.';
                              return false;
                          }
 
-                         const response = await fetch(@js(route('portal.checkout-access', $zona)), {
+                         const response = await fetch(this.$el.dataset.checkoutAccessUrl, {
                              method: 'POST',
                              headers: {
                                  'Content-Type': 'application/json',
                                  'Accept': 'application/json',
-                                 'X-CSRF-TOKEN': @js(csrf_token()),
+                                 'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
                              },
                              body: JSON.stringify({
                                  hotspot_ip: hotspotIp,
@@ -1175,7 +1175,7 @@
                              return;
                          }
 
-                         const stripeKey = @js(config('services.stripe.key'));
+                         const stripeKey = this.$el.dataset.stripeKey || '';
                          if (!stripeKey) {
                              this.stripeError = 'Stripe no está configurado correctamente en este portal.';
                              return;
@@ -1206,19 +1206,22 @@
                                  return;
                              }
 
-                             const intentResponse = await fetch(@js(route('portal.checkout-intent', $zona)), {
+                             const hotspotIp = this.$el.dataset.hotspotIp || null;
+                             const hotspotMac = this.$el.dataset.hotspotMac || null;
+
+                             const intentResponse = await fetch(this.$el.dataset.checkoutIntentUrl, {
                                  method: 'POST',
                                  headers: {
                                      'Content-Type': 'application/json',
                                      'Accept': 'application/json',
-                                     'X-CSRF-TOKEN': @js(csrf_token()),
+                                     'X-CSRF-TOKEN': this.$el.dataset.csrfToken,
                                  },
                                  body: JSON.stringify({
                                      plan_id: this.planSel.id,
                                      compra_email: this.compraEmail,
                                      compra_nombre: this.compraNombre,
-                                     hotspot_ip: @js($ip ?? null),
-                                     hotspot_mac: @js($mac ?? null),
+                                     hotspot_ip: hotspotIp,
+                                     hotspot_mac: hotspotMac,
                                  }),
                              });
 
@@ -1246,7 +1249,7 @@
                              }
 
                              if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                                 const okUrl = @js(route('portal.pago-exitoso', $zona));
+                                 const okUrl = this.$el.dataset.pagoExitosoUrl;
                                  window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id);
                                  return;
                              }
@@ -1262,6 +1265,13 @@
                      @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false; accessReady = false; if(card){ card.destroy(); card = null; elements = null; stripe = null; }"
              @click.stop
              class="compra-modal" 
+             data-hotspot-ip="{{ $ip ?? '' }}"
+             data-hotspot-mac="{{ $mac ?? '' }}"
+             data-checkout-access-url="{{ route('portal.checkout-access', $zona) }}"
+             data-checkout-intent-url="{{ route('portal.checkout-intent', $zona) }}"
+             data-pago-exitoso-url="{{ route('portal.pago-exitoso', $zona) }}"
+             data-csrf-token="{{ csrf_token() }}"
+             data-stripe-key="{{ config('services.stripe.key') }}"
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
 
             {{-- Header --}}
