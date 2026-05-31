@@ -1106,6 +1106,18 @@
                          return window.location.origin + '/portal/' + match[1] + '/' + action;
                      },
                      async postJsonWithFallback(url, payload, label, fallbackAction) {
+                         const fallbackUrl = this.buildFallbackEndpoint(fallbackAction);
+                         const primaryUrl = (url && url !== 'undefined') ? url : fallbackUrl;
+
+                         if (!primaryUrl) {
+                             return {
+                                 ok: false,
+                                 response: { status: 0 },
+                                 raw: '',
+                                 json: null,
+                             };
+                         }
+
                          const doRequest = async (targetUrl) => {
                              const response = await fetch(targetUrl, {
                                  method: 'POST',
@@ -1131,12 +1143,11 @@
                              return { ok: true, response, raw, json };
                          };
 
-                         let result = await doRequest(url);
+                         let result = await doRequest(primaryUrl);
 
                          if (!result.ok && result.raw && result.raw.includes('Zona No Encontrada')) {
-                             const fallbackUrl = this.buildFallbackEndpoint(fallbackAction);
-                             if (fallbackUrl && fallbackUrl !== url) {
-                                 console.warn(label + ' fallback URL', { from: url, to: fallbackUrl });
+                             if (fallbackUrl && fallbackUrl !== primaryUrl) {
+                                 console.warn(label + ' fallback URL', { from: primaryUrl, to: fallbackUrl });
                                  result = await doRequest(fallbackUrl);
                              }
                          }
@@ -1180,6 +1191,10 @@
 
                          if (data.hotspot_ip) {
                              this.$el.dataset.hotspotIp = data.hotspot_ip;
+                         }
+
+                         if (data.stripe_key) {
+                             this.$el.dataset.stripeKey = data.stripe_key;
                          }
 
                          this.accessReady = true;
@@ -1230,7 +1245,7 @@
 
                          const stripeKey = this.$el.dataset.stripeKey || '';
                          if (!stripeKey) {
-                             this.stripeError = 'Stripe no está configurado correctamente en este portal.';
+                             this.stripeError = 'Stripe no está configurado correctamente (falta STRIPE_KEY en servidor o caché de config desactualizada).';
                              return;
                          }
 

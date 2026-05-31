@@ -67,6 +67,7 @@ class CheckoutAccessController extends Controller
             return response()->json([
                 'ok' => true,
                 'hotspot_ip' => $resolvedIp,
+                'stripe_key' => (string) config('services.stripe.key'),
             ]);
         } catch (\Throwable $e) {
             Log::error('Checkout access temporal: error al habilitar acceso en MikroTik', [
