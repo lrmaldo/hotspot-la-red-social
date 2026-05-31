@@ -41,6 +41,14 @@ class StripeWebhookController
             case 'checkout.session.expired':
                 $this->handleCheckoutExpired($event->data->object);
                 break;
+
+            case 'payment_intent.succeeded':
+                $this->handlePaymentIntentSucceeded($event->data->object);
+                break;
+
+            case 'payment_intent.payment_failed':
+                $this->handlePaymentIntentFailed($event->data->object);
+                break;
         }
 
         return response('OK', 200);
@@ -62,22 +70,108 @@ class StripeWebhookController
             return;
         }
 
-        DB::transaction(function () use ($voucher, $session): void {
-            $voucher->update([
+        $this->finalizarVoucherPagado(
+            $voucher,
+            (float) (($session->amount_total ?? 0) / 100),
+            $session->id,
+            (string) ($session->payment_intent ?? ''),
+            'checkout.session.completed',
+        );
+    }
+
+    private function handlePaymentIntentSucceeded(object $paymentIntent): void
+    {
+        $voucherId = $paymentIntent->metadata->voucher_id ?? null;
+
+        if (! $voucherId) {
+            Log::warning('Stripe webhook: payment_intent.succeeded sin voucher_id en metadata');
+            return;
+        }
+
+        $voucher = Voucher::with('plan', 'zona')->find($voucherId);
+
+        if (! $voucher) {
+            Log::warning('Stripe webhook: voucher no encontrado en payment_intent.succeeded', ['voucher_id' => $voucherId]);
+            return;
+        }
+
+        $this->finalizarVoucherPagado(
+            $voucher,
+            (float) (($paymentIntent->amount_received ?: $paymentIntent->amount) / 100),
+            null,
+            (string) $paymentIntent->id,
+            'payment_intent.succeeded',
+        );
+    }
+
+    private function handlePaymentIntentFailed(object $paymentIntent): void
+    {
+        $voucherId = $paymentIntent->metadata->voucher_id ?? null;
+
+        if (! $voucherId) {
+            return;
+        }
+
+        $voucher = Voucher::find($voucherId);
+
+        if (! $voucher) {
+            return;
+        }
+
+        $voucher->update([
+            'estado' => 'pendiente',
+            'stripe_payment_id' => (string) $paymentIntent->id,
+        ]);
+
+        PagoLog::create([
+            'voucher_id' => $voucher->id,
+            'evento' => 'payment_intent.payment_failed',
+            'monto' => ($paymentIntent->amount ?? 0) / 100,
+            'pasarela' => 'stripe',
+            'referencia_externa' => (string) $paymentIntent->id,
+            'respuesta_json' => (array) $paymentIntent,
+            'estado' => 'rechazado',
+        ]);
+    }
+
+    private function finalizarVoucherPagado(
+        Voucher $voucher,
+        float $monto,
+        ?string $sessionId,
+        string $paymentId,
+        string $evento,
+    ): void {
+        if ($voucher->estado === 'vendido' && $voucher->stripe_payment_id === $paymentId) {
+            return;
+        }
+
+        DB::transaction(function () use ($voucher, $monto, $sessionId, $paymentId, $evento): void {
+            $voucherData = [
                 'estado'            => 'vendido',
-                'stripe_session_id' => $session->id,
-                'stripe_payment_id' => $session->payment_intent,
-                'monto_pagado'      => $session->amount_total / 100,
+                'stripe_payment_id' => $paymentId,
+                'monto_pagado'      => $monto,
                 'fecha_venta'       => now(),
                 'fecha_expiracion'  => now()->addMinutes($voucher->plan->duracion_minutos),
+            ];
+
+            if ($sessionId) {
+                $voucherData['stripe_session_id'] = $sessionId;
+            }
+
+            $voucher->update([
+                ...$voucherData,
             ]);
 
             PagoLog::create([
                 'voucher_id'         => $voucher->id,
-                'evento'             => 'checkout.session.completed',
-                'monto'              => $session->amount_total / 100,
-                'referencia_externa' => $session->payment_intent,
-                'respuesta_json'     => (array) $session,
+                'evento'             => $evento,
+                'monto'              => $monto,
+                'pasarela'           => 'stripe',
+                'referencia_externa' => $paymentId,
+                'respuesta_json'     => [
+                    'payment_id' => $paymentId,
+                    'session_id' => $sessionId,
+                ],
                 'estado'             => 'aprobado',
             ]);
 

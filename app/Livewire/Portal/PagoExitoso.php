@@ -17,6 +17,7 @@ class PagoExitoso extends Component
     public Zona $zona;
     public ?Voucher $voucher = null;
     public string $sessionId = '';
+    public string $paymentIntentId = '';
     public int $intentos = 0;
     public bool $procesando = true;
 
@@ -24,15 +25,22 @@ class PagoExitoso extends Component
     {
         $this->zona = $zona;
         $this->sessionId = request()->get('session_id', '');
+        $this->paymentIntentId = request()->get('payment_intent', '');
         $this->cargarVoucher();
     }
 
     public function cargarVoucher(): void
     {
-        $this->voucher = Voucher::with('plan')
-            ->where('stripe_session_id', $this->sessionId)
-            ->where('zona_id', $this->zona->id)
-            ->first();
+        $query = Voucher::with('plan')
+            ->where('zona_id', $this->zona->id);
+
+        if ($this->paymentIntentId !== '') {
+            $query->where('stripe_payment_id', $this->paymentIntentId);
+        } else {
+            $query->where('stripe_session_id', $this->sessionId);
+        }
+
+        $this->voucher = $query->first();
 
         if ($this->voucher && $this->voucher->estado === 'vendido') {
             $this->procesando = false;

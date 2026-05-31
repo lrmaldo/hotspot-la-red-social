@@ -1075,6 +1075,11 @@
                      planSel: null,
                      compraNombre: '',
                      compraEmail: '',
+                     stripe: null,
+                     elements: null,
+                     card: null,
+                     stripeError: '',
+                     paying: false,
                      selectPlan(planId, nombre, precio, duracion) {
                          this.planSel = {
                              id: Number(planId),
@@ -1083,15 +1088,101 @@
                              duracion: Number(duracion)
                          };
                          this.paso = 3;
+                         this.$nextTick(() => this.mountStripeCard());
                      },
                      formatDuracion(mins) {
                          if (mins < 60) return mins + ' min';
                          if (mins < 1440) { let h = Math.floor(mins/60); return h + (h===1?' hora':' horas'); }
                          if (mins < 10080) { let d = Math.floor(mins/1440); return d + (d===1?' día':' días'); }
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
+                     },
+                     mountStripeCard() {
+                         if (this.card || !this.$refs.cardElement) {
+                             return;
+                         }
+
+                         if (!window.Stripe) {
+                             this.stripeError = 'No pudimos cargar Stripe. Intenta recargar la página.';
+                             return;
+                         }
+
+                         const stripeKey = @js(config('services.stripe.key'));
+                         if (!stripeKey) {
+                             this.stripeError = 'Stripe no está configurado correctamente en este portal.';
+                             return;
+                         }
+
+                         this.stripe = window.Stripe(stripeKey);
+                         this.elements = this.stripe.elements();
+                         this.card = this.elements.create('card', { hidePostalCode: true });
+                         this.card.mount(this.$refs.cardElement);
+                         this.card.on('change', (event) => {
+                             this.stripeError = event.error ? event.error.message : '';
+                         });
+                     },
+                     async pagarConTarjeta() {
+                         if (!this.planSel || this.paying) {
+                             return;
+                         }
+
+                         this.stripeError = '';
+                         this.paying = true;
+
+                         try {
+                             this.mountStripeCard();
+
+                             const intentResponse = await fetch(@js(route('portal.checkout-intent', $zona)), {
+                                 method: 'POST',
+                                 headers: {
+                                     'Content-Type': 'application/json',
+                                     'Accept': 'application/json',
+                                     'X-CSRF-TOKEN': @js(csrf_token()),
+                                 },
+                                 body: JSON.stringify({
+                                     plan_id: this.planSel.id,
+                                     compra_email: this.compraEmail,
+                                     compra_nombre: this.compraNombre,
+                                 }),
+                             });
+
+                             const intentData = await intentResponse.json();
+                             if (!intentResponse.ok || !intentData.client_secret) {
+                                 this.stripeError = intentData.message || 'No pudimos iniciar el pago. Intenta de nuevo.';
+                                 this.paying = false;
+                                 return;
+                             }
+
+                             const result = await this.stripe.confirmCardPayment(intentData.client_secret, {
+                                 payment_method: {
+                                     card: this.card,
+                                     billing_details: {
+                                         name: this.compraNombre || undefined,
+                                         email: this.compraEmail || undefined,
+                                     },
+                                 },
+                             });
+
+                             if (result.error) {
+                                 this.stripeError = result.error.message || 'No pudimos procesar la tarjeta.';
+                                 this.paying = false;
+                                 return;
+                             }
+
+                             if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                                 const okUrl = @js(route('portal.pago-exitoso', $zona));
+                                 window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id);
+                                 return;
+                             }
+
+                             this.stripeError = 'El pago requiere validación adicional. Intenta de nuevo.';
+                         } catch (error) {
+                             this.stripeError = 'Ocurrió un error al iniciar el pago. Intenta nuevamente.';
+                         } finally {
+                             this.paying = false;
+                         }
                      }
                  }"
-                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''"
+                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false"
              @click.stop
              class="compra-modal" 
              style="background: white; border-radius: 1.5rem; width: 100%; max-width: 650px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; margin: auto;">
@@ -1182,9 +1273,7 @@
                             <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
                         </div>
 
-                        <form method="POST" action="{{ route('portal.checkout', $zona) }}" style="display:flex; flex-direction:column; gap:0.75rem;">
-                            @csrf
-                            <input type="hidden" name="plan_id" :value="planSel ? planSel.id : ''">
+                        <form @submit.prevent="pagarConTarjeta" style="display:flex; flex-direction:column; gap:0.75rem;">
 
                         <div class="compra-input-group">
                             <label class="compra-input-label">Correo electrónico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
@@ -1203,6 +1292,14 @@
                             <div class="compra-input-wrapper">
                                 <input type="text" x-model="compraNombre" name="compra_nombre" class="compra-input" placeholder="Ej: Juan Perez">
                             </div>
+                        </div>
+
+                        <div class="compra-input-group">
+                            <label class="compra-input-label">Tarjeta</label>
+                            <div class="compra-input-wrapper" style="padding: 0.875rem 1rem; border: 2px solid #e2e8f0; border-radius: 0.75rem; background: #f8fafc;">
+                                <div x-ref="cardElement"></div>
+                            </div>
+                            <p x-show="stripeError" x-text="stripeError" style="color:#ef4444; font-size:0.8rem; margin-top:8px; font-weight:500;"></p>
                         </div>
 
                         <template x-if="planSel">
@@ -1236,12 +1333,13 @@
 
                         <div style="display:flex; flex-direction:column; gap:0.75rem;">
                             @error('plan_id') <p style="color:#ef4444; font-size:0.875rem; text-align:center;">{{ $message }}</p> @enderror
-                                <button type="submit" class="compra-btn-primary" :disabled="!planSel" :style="!planSel ? 'opacity:.7; cursor:not-allowed;' : ''">
+                                <button type="submit" class="compra-btn-primary" :disabled="!planSel || paying" :style="(!planSel || paying) ? 'opacity:.7; cursor:not-allowed;' : ''">
                                 <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
                                     <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                     </svg>
-                                    Pagar con Tarjeta
+                                    <span x-show="!paying">Pagar con Tarjeta</span>
+                                    <span x-cloak x-show="paying">Procesando...</span>
                                 </div>
                             </button>
                             
@@ -1264,6 +1362,10 @@
             </div>
         </div>
     </div>
+    @if(isset($zona) && $zona->venta_vouchers_activa)
+        <script src="https://js.stripe.com/v3/"></script>
+    @endif
+
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>

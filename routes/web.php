@@ -11,6 +11,7 @@ use App\Livewire\Portal\CompraPlan;
 use App\Livewire\Portal\PagoExitoso;
 use App\Livewire\Portal\PinLogin;
 use App\Http\Controllers\Portal\CheckoutController;
+use App\Http\Controllers\Portal\CheckoutIntentController;
 
 Route::get('/zona-no-encontrada', function () {
     return view('zona-no-encontrada');
@@ -32,6 +33,9 @@ Route::get('/portal/{zona:id_personalizado}/pago-exitoso', PagoExitoso::class)
 
 Route::post('/portal/{zona:id_personalizado}/checkout', CheckoutController::class)
     ->name('portal.checkout');
+
+Route::post('/portal/{zona:id_personalizado}/checkout-intent', CheckoutIntentController::class)
+    ->name('portal.checkout-intent');
 
 // Alias for portal.zona (used in emails/views)
 Route::get('/portal/{zona:id_personalizado}/zona', CarruselCampanas::class)

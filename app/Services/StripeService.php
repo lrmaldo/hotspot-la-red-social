@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Voucher;
 use App\Models\Zona;
 use Stripe\Checkout\Session;
+use Stripe\PaymentIntent;
 use Stripe\StripeClient;
 
 class StripeService
@@ -55,5 +56,26 @@ class StripeService
     public function obtenerSesion(string $sessionId): Session
     {
         return $this->stripe->checkout->sessions->retrieve($sessionId);
+    }
+
+    public function crearPaymentIntent(Plan $plan, Zona $zona, Voucher $voucher): PaymentIntent
+    {
+        $intentData = [
+            'amount' => (int) ($plan->precio * 100),
+            'currency' => 'mxn',
+            'payment_method_types' => ['card'],
+            'description' => sprintf('Voucher %s - %s', $plan->nombre, $zona->nombre),
+            'metadata' => [
+                'voucher_id' => (string) $voucher->id,
+                'zona_id' => (string) $zona->id,
+                'plan_id' => (string) $plan->id,
+            ],
+        ];
+
+        if (! empty($voucher->comprador_email)) {
+            $intentData['receipt_email'] = $voucher->comprador_email;
+        }
+
+        return $this->stripe->paymentIntents->create($intentData);
     }
 }
