@@ -1326,7 +1326,12 @@
                              }
 
                              if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                                 const okUrl = this.$el.dataset.pagoExitosoUrl;
+                                 const okUrl = this.$el.dataset.pagoExitosoUrl || this.buildFallbackEndpoint('pago-exitoso');
+                                 if (!okUrl) {
+                                     this.stripeError = 'No se pudo construir la URL de confirmación de pago.';
+                                     this.paying = false;
+                                     return;
+                                 }
                                  window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id);
                                  return;
                              }

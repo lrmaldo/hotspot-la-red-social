@@ -86,4 +86,9 @@ class StripeService
 
         return $this->stripe->paymentIntents->create($intentData);
     }
+
+    public function obtenerPaymentIntent(string $paymentIntentId): PaymentIntent
+    {
+        return $this->stripe->paymentIntents->retrieve($paymentIntentId, []);
+    }
 }
