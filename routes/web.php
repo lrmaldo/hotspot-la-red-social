@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
 use App\Livewire\Admin\Planes\Index as PlanesIndex;
@@ -44,6 +45,26 @@ Route::get('/portal/{zona:id_personalizado}/zona', CarruselCampanas::class)
 // Stripe Webhook
 Route::post('/webhook/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handle'])
     ->name('webhook.stripe');
+
+Route::get('/js/stripe-v3', function () {
+    try {
+        $response = Http::timeout(12)->get('https://js.stripe.com/v3/');
+
+        if (! $response->successful()) {
+            return response('// stripe-js proxy unavailable', 502)
+                ->header('Content-Type', 'application/javascript; charset=UTF-8')
+                ->header('Cache-Control', 'no-store');
+        }
+
+        return response($response->body(), 200)
+            ->header('Content-Type', 'application/javascript; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=3600');
+    } catch (\Throwable) {
+        return response('// stripe-js proxy unavailable', 502)
+            ->header('Content-Type', 'application/javascript; charset=UTF-8')
+            ->header('Cache-Control', 'no-store');
+    }
+})->name('stripe.js.proxy');
 
 Route::get('/', function () {
     return view('welcome');
