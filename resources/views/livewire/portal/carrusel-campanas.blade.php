@@ -1077,7 +1077,7 @@
                      compraEmail: '',
                      stripe: null,
                      elements: null,
-                     card: null,
+                     paymentElement: null,
                      accessReady: false,
                      stripeError: '',
                      paying: false,
@@ -1089,7 +1089,7 @@
                              duracion: Number(duracion)
                          };
                          this.paso = 3;
-                         this.$nextTick(() => this.mountStripeCard());
+                         this.$nextTick(() => this.mountPaymentElement());
                      },
                      formatDuracion(mins) {
                          if (mins < 60) return mins + ' min';
@@ -1226,8 +1226,8 @@
 
                          return !!window.Stripe;
                      },
-                     async mountStripeCard() {
-                         if (this.card || !this.$refs.cardElement) {
+                     async mountPaymentElement() {
+                         if (this.paymentElement || !this.$refs.cardElement) {
                              return;
                          }
 
@@ -1252,10 +1252,28 @@
                          }
 
                          this.stripe = window.Stripe(stripeKey);
-                         this.elements = this.stripe.elements();
-                         this.card = this.elements.create('card', { hidePostalCode: true });
-                         this.card.mount(this.$refs.cardElement);
-                         this.card.on('change', (event) => {
+                         this.elements = this.stripe.elements({
+                             mode: 'payment',
+                             amount: Math.round(this.planSel.precio * 100),
+                             currency: 'mxn',
+                             paymentMethodTypes: ['card'],
+                         });
+
+                         this.paymentElement = this.elements.create('payment', {
+                             fields: {
+                                 billingDetails: {
+                                     name: 'never',
+                                     email: 'never',
+                                 },
+                             },
+                             wallets: {
+                                 applePay: 'never',
+                                 googlePay: 'never',
+                             },
+                         });
+
+                         this.paymentElement.mount(this.$refs.cardElement);
+                         this.paymentElement.on('change', (event) => {
                              this.stripeError = event.error ? event.error.message : '';
                          });
                      },
@@ -1268,10 +1286,19 @@
                          this.paying = true;
 
                          try {
-                             await this.mountStripeCard();
+                             if (!this.paymentElement) {
+                                 await this.mountPaymentElement();
+                             }
 
-                             if (!this.card) {
-                                 this.stripeError = this.stripeError || 'No se pudo preparar el formulario de tarjeta.';
+                             if (!this.paymentElement) {
+                                 this.stripeError = this.stripeError || 'No se pudo preparar el formulario de pago.';
+                                 this.paying = false;
+                                 return;
+                             }
+
+                             const { error: submitError } = await this.elements.submit();
+                             if (submitError) {
+                                 this.stripeError = submitError.message || 'Verifica los datos de tu tarjeta.';
                                  this.paying = false;
                                  return;
                              }
@@ -1294,49 +1321,51 @@
                              );
 
                              if (!intentResult.ok) {
-                                 console.error('checkout-intent respuesta no JSON', {
-                                     status: intentResult.response.status,
-                                     sample: intentResult.raw.slice(0, 500),
-                                 });
                                  this.stripeError = 'Respuesta inválida al crear pago (no JSON). Revisa URL de portal y caché.';
                                  this.paying = false;
                                  return;
                              }
 
-                             const intentResponse = intentResult.response;
                              const intentData = intentResult.json;
-
-                             if (!intentResponse.ok || !intentData.client_secret) {
+                             if (!intentResult.response.ok || !intentData.client_secret) {
                                  this.stripeError = intentData.message || 'No pudimos iniciar el pago. Intenta de nuevo.';
                                  this.paying = false;
                                  return;
                              }
 
-                             const result = await this.stripe.confirmCardPayment(intentData.client_secret, {
-                                 payment_method: {
-                                     card: this.card,
-                                     billing_details: {
-                                         name: this.compraNombre || undefined,
-                                         email: this.compraEmail || undefined,
-                                     },
-                                 },
-                             });
-
-                             if (result.error) {
-                                 this.stripeError = result.error.message || 'No pudimos procesar la tarjeta.';
+                             const okUrl = this.$el.dataset.pagoExitosoUrl || this.buildFallbackEndpoint('pago-exitoso');
+                             if (!okUrl) {
+                                 this.stripeError = 'No se pudo construir la URL de confirmación de pago.';
                                  this.paying = false;
                                  return;
                              }
 
-                             if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                                 const okUrl = this.$el.dataset.pagoExitosoUrl || this.buildFallbackEndpoint('pago-exitoso');
-                                 if (!okUrl) {
-                                     this.stripeError = 'No se pudo construir la URL de confirmación de pago.';
-                                     this.paying = false;
-                                     return;
-                                 }
-                                 const hotspotIpQs = hotspotIp ? '&hotspot_ip=' + encodeURIComponent(hotspotIp) : '';
-                                 window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(result.paymentIntent.id) + hotspotIpQs;
+                             const hotspotIpQs = hotspotIp ? '&hotspot_ip=' + encodeURIComponent(hotspotIp) : '';
+                             const returnUrl = okUrl + '?payment_intent=' + encodeURIComponent(intentData.payment_intent_id || '') + hotspotIpQs;
+
+                             const { error, paymentIntent } = await this.stripe.confirmPayment({
+                                 elements: this.elements,
+                                 clientSecret: intentData.client_secret,
+                                 confirmParams: {
+                                     return_url: returnUrl,
+                                     payment_method_data: {
+                                         billing_details: {
+                                             name: this.compraNombre || undefined,
+                                             email: this.compraEmail || undefined,
+                                         },
+                                     },
+                                 },
+                                 redirect: 'if_required',
+                             });
+
+                             if (error) {
+                                 this.stripeError = error.message || 'No pudimos procesar la tarjeta.';
+                                 this.paying = false;
+                                 return;
+                             }
+
+                             if (paymentIntent && paymentIntent.status === 'succeeded') {
+                                 window.location.href = okUrl + '?payment_intent=' + encodeURIComponent(paymentIntent.id) + hotspotIpQs;
                                  return;
                              }
 
@@ -1348,7 +1377,7 @@
                          }
                      }
                  }"
-                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false; accessReady = false; if(card){ card.destroy(); card = null; elements = null; stripe = null; }"
+                     @abrir-compra-modal.window="paso = 1; planSel = null; compraNombre = ''; compraEmail = ''; stripeError = ''; paying = false; accessReady = false; if(paymentElement){ paymentElement.destroy(); paymentElement = null; elements = null; stripe = null; }"
              @click.stop
              class="compra-modal" 
              data-hotspot-ip="{{ $ip ?? '' }}"
