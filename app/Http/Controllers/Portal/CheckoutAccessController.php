@@ -27,13 +27,71 @@ class CheckoutAccessController extends Controller
 
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
-        
-        // El bypass temporal ya no se usa, confiamos en Walled Garden
-        return response()->json([
-            'ok' => true,
-            'hotspot_ip' => $hotspotIp,
-            'stripe_key' => (string) config('services.stripe.key'),
-            'temp_access_skipped' => true,
-        ]);
+        $skipTempAccess = (bool) ($data['skip_temp_access'] ?? false);
+
+        if (! $hotspotIp) {
+            $hotspotIp = (string) $request->session()->get('hotspot.ip', '');
+            $hotspotIp = $hotspotIp !== '' ? $hotspotIp : null;
+        }
+
+        if (! $hotspotMac) {
+            $hotspotMac = (string) $request->session()->get('hotspot.mac', '');
+            $hotspotMac = $hotspotMac !== '' ? $hotspotMac : null;
+        }
+
+        if (! $hotspotIp && ! $hotspotMac) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se detectó IP ni MAC del cliente para habilitar acceso temporal.',
+            ], 422);
+        }
+
+        $mikrotik = new MikrotikService($zona);
+        $resolvedIp = $mikrotik->resolverIpParaPagoTemporal($hotspotIp, $hotspotMac);
+
+        if (! $resolvedIp) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No se pudo resolver la IP del cliente en el hotspot.',
+            ], 422);
+        }
+
+        if ($skipTempAccess) {
+            return response()->json([
+                'ok' => true,
+                'hotspot_ip' => $resolvedIp,
+                'stripe_key' => (string) config('services.stripe.key'),
+                'temp_access_skipped' => true,
+            ]);
+        }
+
+        try {
+            $ok = $mikrotik->habilitarAccesoPagoTemporal($resolvedIp, $hotspotMac, 10);
+
+            if (! $ok) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No se pudo habilitar el acceso temporal para pago.',
+                ], 422);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'hotspot_ip' => $resolvedIp,
+                'stripe_key' => (string) config('services.stripe.key'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Checkout access temporal: error al habilitar acceso en MikroTik', [
+                'zona_id' => $zona->id,
+                'hotspot_ip' => $resolvedIp,
+                'hotspot_mac' => $hotspotMac,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Error inesperado al habilitar acceso temporal.',
+            ], 500);
+        }
     }
 }

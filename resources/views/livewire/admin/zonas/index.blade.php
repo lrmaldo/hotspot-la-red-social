@@ -46,7 +46,9 @@
                                 <div class="text-xs text-gray-500 uppercase tracking-wide">{{ str_replace('_', ' ', $z->tipo_autenticacion) }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                @livewire('admin.zonas.plan-manager', ['zona' => $z], key('plan-manager-' . $z->id))
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-teal-100 text-teal-800">
+                                    {{ $z->planes_count }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -60,6 +62,7 @@
                                 </button>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                @livewire('admin.zonas.plan-manager', ['zona' => $z], key('plan-manager-' . $z->id))
                                 <a href="{{ route('admin.zonas.mikrotik', $z->id) }}"
                                    title="Descargar Archivos MikroTik"
                                    class="text-green-600 hover:text-green-900 inline-block p-1 bg-green-50 rounded hover:bg-green-100">
