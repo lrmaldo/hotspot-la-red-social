@@ -1260,12 +1260,6 @@
                          });
 
                          this.paymentElement = this.elements.create('payment', {
-                             fields: {
-                                 billingDetails: {
-                                     name: 'never',
-                                     email: 'never',
-                                 },
-                             },
                              wallets: {
                                  applePay: 'never',
                                  googlePay: 'never',
@@ -1348,12 +1342,6 @@
                                  clientSecret: intentData.client_secret,
                                  confirmParams: {
                                      return_url: returnUrl,
-                                     payment_method_data: {
-                                         billing_details: {
-                                             name: this.compraNombre || undefined,
-                                             email: this.compraEmail || undefined,
-                                         },
-                                     },
                                  },
                                  redirect: 'if_required',
                              });
@@ -1471,33 +1459,14 @@
                     {{-- PASO 3: Resumen y pago --}}
                     <div x-show="paso === 3">
                         <div style="text-align: center; margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Confirmar compra</h3>
-                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Revisa los detalles antes de pagar</p>
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Pagar Acceso</h3>
+                            <p style="font-size: 0.875rem; color: #64748b; margin-top: 4px;">Ingresa los datos de tu tarjeta</p>
                         </div>
 
                         <form @submit.prevent="pagarConTarjeta" style="display:flex; flex-direction:column; gap:0.75rem;">
 
                         <div class="compra-input-group">
-                            <label class="compra-input-label">Correo electrónico <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
-                            <div class="compra-input-wrapper">
-                                <input type="email" x-model="compraEmail" name="compra_email" class="compra-input" placeholder="ejemplo@correo.com">
-                            </div>
-                            @error('compra_email') <p style="color:#ef4444; font-size:0.75rem; margin-top:6px; font-weight:500;">{{ $message }}</p> @enderror
-                            <p style="font-size:0.75rem; color:#64748b; margin-top:8px; display:flex; align-items:center; gap:4px;">
-                                <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Te enviaremos tu código de acceso por este medio
-                            </p>
-                        </div>
-
-                        <div class="compra-input-group">
-                            <label class="compra-input-label">Nombre completo <span style="font-weight:400; color:#94a3b8;">(opcional)</span></label>
-                            <div class="compra-input-wrapper">
-                                <input type="text" x-model="compraNombre" name="compra_nombre" class="compra-input" placeholder="Ej: Juan Perez">
-                            </div>
-                        </div>
-
-                        <div class="compra-input-group">
-                            <label class="compra-input-label">Tarjeta</label>
+                            <label class="compra-input-label">Detalles de Pago</label>
                             <div class="compra-input-wrapper" style="padding: 0.875rem 1rem; border: 2px solid #e2e8f0; border-radius: 0.75rem; background: #f8fafc;">
                                 <div x-ref="cardElement"></div>
                             </div>
@@ -1507,25 +1476,13 @@
                         <template x-if="planSel">
                             <div class="compra-resumen">
                                 <div class="compra-resumen-row">
-                                    <span class="label">Plan seleccionado</span>
+                                    <span class="label">Plan</span>
                                     <span class="value" x-text="planSel.nombre"></span>
                                 </div>
                                 <div class="compra-resumen-row">
                                     <span class="label">Duración</span>
                                     <span class="value" x-text="formatDuracion(planSel.duracion)"></span>
                                 </div>
-                                <template x-if="compraNombre">
-                                    <div class="compra-resumen-row">
-                                        <span class="label">Nombre</span>
-                                        <span class="value" x-text="compraNombre"></span>
-                                    </div>
-                                </template>
-                                <template x-if="compraEmail">
-                                    <div class="compra-resumen-row">
-                                        <span class="label">Correo</span>
-                                        <span class="value" x-text="compraEmail"></span>
-                                    </div>
-                                </template>
                                 <div class="compra-resumen-row compra-resumen-total">
                                     <span class="label" style="font-weight:800; color:#0f172a;">Total a pagar</span>
                                     <span class="value" x-text="'$' + parseFloat(planSel.precio).toFixed(2) + ' MXN'"></span>
@@ -1546,7 +1503,7 @@
                             </button>
                             
                             <button type="button" class="btn-pin" style="width: 100%; border: none; background: transparent; color: #64748b; font-size: 0.9rem; font-weight: 600;" @click="paso = 1; planSel = null">
-                                Volver a seleccionar plan
+                                Cambiar Plan
                             </button>
                         </div>
                         </form>

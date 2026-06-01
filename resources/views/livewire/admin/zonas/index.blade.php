@@ -17,6 +17,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hotspot / Autenticación</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Planes</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Campañas</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Estado</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -43,6 +44,9 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $z->hotspot_host }}</div>
                                 <div class="text-xs text-gray-500 uppercase tracking-wide">{{ str_replace('_', ' ', $z->tipo_autenticacion) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                @livewire('admin.zonas.plan-manager', ['zona' => $z], key('plan-manager-' . $z->id))
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -77,7 +81,7 @@
                                 <button type="button" title="Eliminar" class="text-red-600 hover:text-red-900 inline-block p-1 bg-red-50 rounded hover:bg-red-100"
                                         x-data @click="window.Swal.fire({
                                             title: '¿Eliminar Zona?',
-                                            text: 'Esta acción borrará todas sus campañas. No se puede deshacer.',
+                                            text: 'Esta acción borrará todas sus campañas y planes. No se puede deshacer.',
                                             icon: 'warning',
                                             showCancelButton: true,
                                             confirmButtonColor: '#d33',
@@ -95,7 +99,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                 No hay zonas registradas.
                             </td>
                         </tr>

@@ -47,11 +47,9 @@ class CheckoutIntentController extends Controller
 
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
-        $skipTempAccess = (bool) ($data['skip_temp_access'] ?? false);
 
-        if (! $skipTempAccess && ($hotspotIp || $hotspotMac)) {
-            (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
-        }
+        // Bypass temporal desactivado para todos los dispositivos
+        // (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
 
         try {
             $intent = (new StripeService())->crearPaymentIntent($plan, $zona, $voucher, $hotspotIp, $hotspotMac);
