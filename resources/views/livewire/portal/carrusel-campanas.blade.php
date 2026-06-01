@@ -1244,7 +1244,9 @@
                          try {
                              await this.ensureStripeLoaded();
                          } catch (error) {
-                             this.stripeError = 'No pudimos cargar Stripe. Intenta recargar la página.';
+                             this.stripeError = this.shouldSkipTempAccess()
+                                 ? 'No pudimos cargar Stripe en red cautiva. Falta habilitar dominios de Stripe en walled-garden.'
+                                 : 'No pudimos cargar Stripe. Intenta recargar la página.';
                              return;
                          }
 
