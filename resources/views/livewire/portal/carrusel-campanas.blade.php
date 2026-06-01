@@ -1098,8 +1098,7 @@
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
                      },
                      shouldSkipTempAccess() {
-                         const ua = (navigator.userAgent || '').toLowerCase();
-                         return /android|iphone|ipad|ipod|mobile|windows phone/.test(ua);
+                         return false;
                      },
                      buildFallbackEndpoint(action) {
                          const match = window.location.pathname.match(/\/portal\/([^/?#]+)/);
@@ -1210,23 +1209,18 @@
                              return true;
                          }
 
-                         await new Promise((resolve, reject) => {
-                             let script = document.querySelector('script[data-stripe-js=\'1\']');
-                             if (!script) {
-                                 script = document.createElement('script');
-                                 script.src = 'https://js.stripe.com/v3/';
-                                 script.async = true;
-                                 script.defer = true;
-                                 script.dataset.stripeJs = '1';
-                                 document.head.appendChild(script);
-                             }
+                         const existing = document.querySelector('script[data-stripe-js=\'1\']');
+                         if (existing) existing.remove();
 
+                         await new Promise((resolve, reject) => {
+                             const script = document.createElement('script');
+                             script.src = 'https://js.stripe.com/v3/';
+                             script.async = true;
+                             script.defer = true;
+                             script.dataset.stripeJs = '1';
                              script.addEventListener('load', () => resolve(true), { once: true });
                              script.addEventListener('error', () => reject(new Error('stripe_load_error')), { once: true });
-
-                             if (window.Stripe) {
-                                 resolve(true);
-                             }
+                             document.head.appendChild(script);
                          });
 
                          return !!window.Stripe;
