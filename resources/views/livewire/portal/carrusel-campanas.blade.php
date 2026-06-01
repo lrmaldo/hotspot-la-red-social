@@ -1098,7 +1098,8 @@
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
                      },
                      shouldSkipTempAccess() {
-                         return false;
+                         const ua = (navigator.userAgent || '').toLowerCase();
+                         return /android|iphone|ipad|ipod|mobile|windows phone/.test(ua);
                      },
                      buildFallbackEndpoint(action) {
                          const match = window.location.pathname.match(/\/portal\/([^/?#]+)/);
