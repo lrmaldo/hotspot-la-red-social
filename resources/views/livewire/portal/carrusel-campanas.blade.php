@@ -961,7 +961,7 @@
                 <div class="auth-title">Acceder a Internet</div>
 
                 <div class="auth-form">
-                    <form id="hotspot-login-form" name="login" action="{{ $link_login_only }}" method="post" onSubmit="return doLogin()">
+                    <form id="hotspot-login-form" name="login" action="{{ $link_login_only ?: '#' }}" method="post" onSubmit="return doLogin()">
                         <input type="hidden" name="dst" value="{{ $link_orig ?? '' }}" />
                         <input type="hidden" name="popup" value="true" />
 
@@ -974,7 +974,7 @@
                         <input type="hidden" name="password" id="password" value="">
 
                         <!-- BotÃ³n primario ahora es para canjear el PIN -->
-                        <button type="submit" class="btn-trial" style="margin-bottom: 0px;" onclick="if(!document.forms['login'].username.value.trim()) return false; document.forms['login'].password.value = document.forms['login'].username.value; this.disabled=true; this.innerText='Conectando...'; document.forms['login'].submit();">
+                        <button type="submit" class="btn-trial" style="margin-bottom: 0px;">
                             Canjear PIN
                         </button>
 
@@ -1097,6 +1097,10 @@
                          if (mins < 10080) { let d = Math.floor(mins/1440); return d + (d===1?' día':' días'); }
                          let s = Math.floor(mins/10080); return s + (s===1?' semana':' semanas');
                      },
+                     shouldSkipTempAccess() {
+                         const ua = (navigator.userAgent || '').toLowerCase();
+                         return /android|iphone|ipad|ipod|mobile|windows phone/.test(ua);
+                     },
                      buildFallbackEndpoint(action) {
                          const match = window.location.pathname.match(/\/portal\/([^/?#]+)/);
                          if (!match || !match[1]) {
@@ -1167,6 +1171,7 @@
                              {
                                  hotspot_ip: hotspotIp,
                                  hotspot_mac: hotspotMac,
+                                 skip_temp_access: this.shouldSkipTempAccess(),
                              },
                              'checkout-access',
                              'checkout-access'
@@ -1285,6 +1290,7 @@
                                      compra_nombre: this.compraNombre,
                                      hotspot_ip: hotspotIp,
                                      hotspot_mac: hotspotMac,
+                                     skip_temp_access: this.shouldSkipTempAccess(),
                                  },
                                  'checkout-intent',
                                  'checkout-intent'
@@ -1542,6 +1548,18 @@
                     alert('Por favor ingresa tu PIN');
                     return false;
                 }
+
+                if (!@js(!empty($link_login_only))) {
+                    alert('No se detectó el endpoint de login del hotspot. Abre nuevamente el portal cautivo e intenta otra vez.');
+                    return false;
+                }
+
+                var submitButton = document.querySelector('#hotspot-login-form button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerText = 'Conectando...';
+                }
+
                 if (!loginForm.password.value) {
                     loginForm.password.value = loginForm.username.value;
                 }
@@ -1575,22 +1593,37 @@
     @else
         <script>
             function doLogin() {
-                if (!document.forms['login'].username.value.trim()) {
+                var form = document.forms['login'];
+                if (!form.username.value.trim()) {
                     alert('Por favor ingresa tu PIN');
                     return false;
                 }
+
+                if (form.action === '#' || !form.action) {
+                    alert('No se detectó el endpoint de login del hotspot. Abre nuevamente el portal cautivo e intenta otra vez.');
+                    return false;
+                }
+
+                form.password.value = form.username.value;
+
+                var submitButton = document.querySelector('#hotspot-login-form button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerText = 'Conectando...';
+                }
+
                 return true;
             }
         </script>
     @endif
 
-    @if(request()->query('auto_submit_pin') === '1' && request()->query('prefill_pin'))
+    @if(request()->query('auto_submit_pin') === '1' && request()->query('prefill_pin') && !empty($link_login_only))
         <script>
             setTimeout(function () {
                 var form = document.getElementById('hotspot-login-form');
                 var username = document.getElementById('username');
 
-                if (!form || !username || !username.value.trim()) {
+                if (!form || !username || !username.value.trim() || form.action === '#' || !form.action) {
                     return;
                 }
 

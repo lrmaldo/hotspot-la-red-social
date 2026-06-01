@@ -53,24 +53,49 @@ class CarruselCampanas extends Component
             abort(404);
         }
         #dd($request->all());
-        // Si se recibe por POST (o GET), capturamos los parámetros de MikroTik
+        // Si se recibe por POST (o GET), capturamos los parámetros de MikroTik.
+        // Si no llegan, usamos el último estado válido guardado en sesión.
         $this->mac = $request->input('mac') ?: $request->session()->get('hotspot.mac', $this->mac);
         $this->ip = $request->input('ip') ?: $request->session()->get('hotspot.ip', $this->ip);
-        $this->username = $request->input('username', $this->username);
-        $this->link_login = $request->input('link-login', $this->link_login);
-        $this->link_orig = $request->input('link-orig', $this->link_orig);
+        $this->username = $request->input('username') ?: $request->session()->get('hotspot.username', $this->username);
+        $this->link_login = $request->input('link-login') ?: $request->session()->get('hotspot.link_login', $this->link_login);
+        $this->link_orig = $request->input('link-orig') ?: $request->session()->get('hotspot.link_orig', $this->link_orig);
         $this->error = $request->input('error', $this->error);
-        $this->chap_id = $request->input('chap-id', $this->chap_id);
-        $this->chap_challenge = $request->input('chap-challenge', $this->chap_challenge);
-        $this->link_login_only = $request->input('link-login-only', $this->link_login_only);
-        $this->link_orig_esc = $request->input('link-orig-esc', $this->link_orig_esc);
-        $this->mac_esc = $request->input('mac-esc', $this->mac_esc);
+        $this->chap_id = $request->input('chap-id') ?: $request->session()->get('hotspot.chap_id', $this->chap_id);
+        $this->chap_challenge = $request->input('chap-challenge') ?: $request->session()->get('hotspot.chap_challenge', $this->chap_challenge);
+        $this->link_login_only = $request->input('link-login-only') ?: $request->session()->get('hotspot.link_login_only', $this->link_login_only);
+        $this->link_orig_esc = $request->input('link-orig-esc') ?: $request->session()->get('hotspot.link_orig_esc', $this->link_orig_esc);
+        $this->mac_esc = $request->input('mac-esc') ?: $request->session()->get('hotspot.mac_esc', $this->mac_esc);
 
         if ($this->ip) {
             $request->session()->put('hotspot.ip', $this->ip);
         }
         if ($this->mac) {
             $request->session()->put('hotspot.mac', $this->mac);
+        }
+        if ($this->username) {
+            $request->session()->put('hotspot.username', $this->username);
+        }
+        if ($this->link_login) {
+            $request->session()->put('hotspot.link_login', $this->link_login);
+        }
+        if ($this->link_orig) {
+            $request->session()->put('hotspot.link_orig', $this->link_orig);
+        }
+        if ($this->chap_id) {
+            $request->session()->put('hotspot.chap_id', $this->chap_id);
+        }
+        if ($this->chap_challenge) {
+            $request->session()->put('hotspot.chap_challenge', $this->chap_challenge);
+        }
+        if ($this->link_login_only) {
+            $request->session()->put('hotspot.link_login_only', $this->link_login_only);
+        }
+        if ($this->link_orig_esc) {
+            $request->session()->put('hotspot.link_orig_esc', $this->link_orig_esc);
+        }
+        if ($this->mac_esc) {
+            $request->session()->put('hotspot.mac_esc', $this->mac_esc);
         }
 
         $this->zona = $zona;

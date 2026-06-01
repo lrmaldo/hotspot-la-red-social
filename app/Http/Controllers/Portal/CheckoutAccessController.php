@@ -22,10 +22,12 @@ class CheckoutAccessController extends Controller
         $data = $request->validate([
             'hotspot_ip' => ['nullable', 'ip'],
             'hotspot_mac' => ['nullable', 'string', 'max:64'],
+            'skip_temp_access' => ['nullable', 'boolean'],
         ]);
 
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
+        $skipTempAccess = (bool) ($data['skip_temp_access'] ?? false);
 
         if (! $hotspotIp) {
             $hotspotIp = (string) $request->session()->get('hotspot.ip', '');
@@ -52,6 +54,15 @@ class CheckoutAccessController extends Controller
                 'ok' => false,
                 'message' => 'No se pudo resolver la IP del cliente en el hotspot.',
             ], 422);
+        }
+
+        if ($skipTempAccess) {
+            return response()->json([
+                'ok' => true,
+                'hotspot_ip' => $resolvedIp,
+                'stripe_key' => (string) config('services.stripe.key'),
+                'temp_access_skipped' => true,
+            ]);
         }
 
         try {

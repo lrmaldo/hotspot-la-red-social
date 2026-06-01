@@ -28,6 +28,7 @@ class CheckoutIntentController extends Controller
             'compra_nombre' => ['nullable', 'string', 'max:120'],
             'hotspot_ip' => ['nullable', 'ip'],
             'hotspot_mac' => ['nullable', 'string', 'max:64'],
+            'skip_temp_access' => ['nullable', 'boolean'],
         ]);
 
         $plan = Plan::where('id', $data['plan_id'])
@@ -46,8 +47,9 @@ class CheckoutIntentController extends Controller
 
         $hotspotIp = $data['hotspot_ip'] ?? null;
         $hotspotMac = $data['hotspot_mac'] ?? null;
+        $skipTempAccess = (bool) ($data['skip_temp_access'] ?? false);
 
-        if ($hotspotIp || $hotspotMac) {
+        if (! $skipTempAccess && ($hotspotIp || $hotspotMac)) {
             (new MikrotikService($zona))->habilitarAccesoPagoTemporal($hotspotIp, $hotspotMac, 10);
         }
 
