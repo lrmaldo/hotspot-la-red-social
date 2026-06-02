@@ -46,6 +46,17 @@ class CheckoutAccessController extends Controller
             ], 422);
         }
 
+        // Móvil con IP ya conocida: no necesita tocar MikroTik en absoluto.
+        // Evita la conexión VPN que reinicia el RB941-2nD bajo carga.
+        if ($skipTempAccess && $hotspotIp) {
+            return response()->json([
+                'ok' => true,
+                'hotspot_ip' => $hotspotIp,
+                'stripe_key' => (string) config('services.stripe.key'),
+                'temp_access_skipped' => true,
+            ]);
+        }
+
         $mikrotik = new MikrotikService($zona);
         $resolvedIp = $mikrotik->resolverIpParaPagoTemporal($hotspotIp, $hotspotMac);
 
