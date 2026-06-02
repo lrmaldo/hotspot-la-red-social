@@ -11,6 +11,8 @@
     @livewireStyles
     {{-- agreg el js/md5.js--}}
    {{--  <script src="{{ asset('js/md5.js') }}"></script> --}}
+    <!-- Stripe.js: pre-cargado para que el walled-garden lo sirva antes de abrir el modal -->
+    <script src="https://js.stripe.com/v3/" async></script>
 </head>
 <body>
     {{ $slot }}
