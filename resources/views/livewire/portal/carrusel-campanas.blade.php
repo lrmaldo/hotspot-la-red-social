@@ -1210,21 +1210,31 @@
                              return true;
                          }
 
-                         const existing = document.querySelector('script[data-stripe-js=\'1\']');
-                         if (existing) existing.remove();
+                         // Reintenta hasta 3 veces con pausa creciente (walled-garden puede tardar)
+                         for (let intento = 1; intento <= 3; intento++) {
+                             if (window.Stripe) return true;
 
-                         await new Promise((resolve, reject) => {
-                             const script = document.createElement('script');
-                             script.src = 'https://js.stripe.com/v3/';
-                             script.async = true;
-                             script.defer = true;
-                             script.dataset.stripeJs = '1';
-                             script.addEventListener('load', () => resolve(true), { once: true });
-                             script.addEventListener('error', () => reject(new Error('stripe_load_error')), { once: true });
-                             document.head.appendChild(script);
-                         });
+                             const existing = document.querySelector('script[data-stripe-js=\'1\']');
+                             if (existing) existing.remove();
 
-                         return !!window.Stripe;
+                             const loaded = await new Promise((resolve) => {
+                                 const script = document.createElement('script');
+                                 script.src = 'https://js.stripe.com/v3/';
+                                 script.async = true;
+                                 script.dataset.stripeJs = '1';
+                                 script.addEventListener('load', () => resolve(true), { once: true });
+                                 script.addEventListener('error', () => resolve(false), { once: true });
+                                 document.head.appendChild(script);
+                             });
+
+                             if (loaded && window.Stripe) return true;
+
+                             if (intento < 3) {
+                                 await new Promise(r => setTimeout(r, intento * 1500));
+                             }
+                         }
+
+                         return false;
                      },
                      async mountPaymentElement() {
                          if (this.paymentElement || !this.$refs.cardElement) {
