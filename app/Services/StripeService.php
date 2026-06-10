@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Plan;
+use App\Models\Setting;
 use App\Models\Voucher;
-use App\Models\Zona;
 use Stripe\Checkout\Session;
 use Stripe\PaymentIntent;
 use Stripe\StripeClient;
@@ -17,7 +17,9 @@ class StripeService
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        $settings = Setting::first();
+        $stripeSecret = $settings->stripe_secret ?? config('services.stripe.secret');
+        $this->stripe = new StripeClient($stripeSecret);
     }
 
     public function crearSesionCheckout(Plan $plan, Zona $zona, Voucher $voucher): string

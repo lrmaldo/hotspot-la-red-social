@@ -11,6 +11,8 @@ class Setting extends Model
     protected $fillable = [
         'key',
         'value',
+        'stripe_key',
+        'stripe_secret',
     ];
 
     /**
