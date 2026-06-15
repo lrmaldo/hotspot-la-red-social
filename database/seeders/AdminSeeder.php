@@ -21,6 +21,9 @@ class AdminSeeder extends Seeder
             ]
         );
 
+        // Super admin protegido: no se muestra en listados ni se puede eliminar.
+        $admin->forceFill(['is_protected' => true])->save();
+
         // Asignar el rol admin al usuario
         $roleAdmin = Role::where('name', 'admin')->first();
         if ($roleAdmin) {

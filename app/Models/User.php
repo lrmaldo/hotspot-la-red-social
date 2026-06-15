@@ -30,7 +30,30 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_protected' => 'boolean',
         ];
+    }
+
+    /**
+     * Impide eliminar usuarios protegidos (super admin) desde cualquier punto
+     * de la aplicación, incluido el formulario de borrado de cuenta.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if ($user->is_protected) {
+                return false;
+            }
+        });
+    }
+
+    /**
+     * Excluye usuarios protegidos de los listados.
+     * Úsalo en cualquier consulta de administración: User::visible()->...
+     */
+    public function scopeVisible($query)
+    {
+        return $query->where('is_protected', false);
     }
 
     /**
