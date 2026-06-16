@@ -6,6 +6,7 @@ use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
 use App\Livewire\Admin\Planes\Index as PlanesIndex;
 use App\Livewire\Admin\Vouchers\Index as VouchersIndex;
 use App\Livewire\Admin\Zonas\Index as ZonasIndex;
+use App\Livewire\Admin\Zonas\Vpn as ZonasVpn;
 use App\Livewire\Portal\CarruselCampanas;
 use App\Livewire\Portal\CompraPlan;
 use App\Livewire\Portal\PagoExitoso;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::prefix('admin')->group(function() {
         Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
+        Route::get('/zonas/{zona}/vpn', ZonasVpn::class)->name('admin.zonas.vpn');
         Route::get('/zonas/{zona}/mikrotik', [\App\Http\Controllers\Admin\MikrotikDownloadController::class, 'download'])->name('admin.zonas.mikrotik');
         Route::get('/campanas', CampanasIndex::class)->name('admin.campanas');
         Route::get('/planes', PlanesIndex::class)->name('admin.planes');
