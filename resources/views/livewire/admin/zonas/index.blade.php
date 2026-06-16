@@ -222,18 +222,18 @@
                                 
                                 <label class="flex items-center cursor-pointer">
                                     <div class="relative">
-                                        <input type="checkbox" wire:model="is_active" class="sr-only">
-                                        <div class="block bg-gray-300 w-10 h-6 rounded-full transition-colors" :class="$wire.is_active ? 'bg-blue-600' : ''"></div>
-                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform" :class="$wire.is_active ? 'transform translate-x-4' : ''"></div>
+                                        <input type="checkbox" wire:model.live="is_active" class="sr-only">
+                                        <div class="block bg-gray-300 w-10 h-6 rounded-full {{ $is_active ? 'bg-blue-600' : '' }} transition-colors"></div>
+                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform {{ $is_active ? 'transform translate-x-4' : '' }}"></div>
                                     </div>
                                     <div class="ml-3 text-sm font-medium text-gray-700">Zona Activa</div>
                                 </label>
 
                                 <label class="flex items-center cursor-pointer">
                                     <div class="relative">
-                                        <input type="checkbox" wire:model="venta_vouchers_activa" class="sr-only">
-                                        <div class="block bg-gray-300 w-10 h-6 rounded-full transition-colors" :class="$wire.venta_vouchers_activa ? 'bg-blue-600' : ''"></div>
-                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform" :class="$wire.venta_vouchers_activa ? 'transform translate-x-4' : ''"></div>
+                                        <input type="checkbox" wire:model.live="venta_vouchers_activa" class="sr-only">
+                                        <div class="block bg-gray-300 w-10 h-6 rounded-full {{ $venta_vouchers_activa ? 'bg-blue-600' : '' }} transition-colors"></div>
+                                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform {{ $venta_vouchers_activa ? 'transform translate-x-4' : '' }}"></div>
                                     </div>
                                     <div class="ml-3 text-sm font-medium text-gray-700">Venta Vouchers (Fase 2)</div>
                                 </label>
