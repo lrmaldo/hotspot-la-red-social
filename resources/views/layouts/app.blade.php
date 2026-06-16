@@ -17,16 +17,15 @@
      @keydown.escape.window="open = false">
 
     {{-- Backdrop móvil --}}
-    <div class="opacity-0 pointer-events-none fixed inset-0 z-40 md:hidden transition-opacity duration-300"
+    <div class="opacity-0 pointer-events-none fixed inset-0 z-40 md:hidden bg-gray-900/60 transition-opacity duration-300"
          :class="{ 'opacity-100 pointer-events-auto': open, 'opacity-0 pointer-events-none': !open }"
          @click="open = false">
-        <div class="absolute inset-0 bg-gray-900/60"></div>
     </div>
 
-    {{-- Sidebar --}}
-    <aside class="-translate-x-full fixed inset-y-0 left-0 z-50 flex flex-col w-72 bg-white shadow-xl
+    {{-- Sidebar: max-w-[260px] en móvil para no ocupar toda la pantalla --}}
+    <aside class="-translate-x-full fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white shadow-xl
                   transition-transform duration-300 ease-in-out
-                  md:static md:translate-x-0 md:flex md:flex-shrink-0 md:shadow-none md:border-r md:border-gray-200"
+                  md:static md:translate-x-0 md:flex md:flex-shrink-0 md:w-64 md:shadow-none md:border-r md:border-gray-200"
            :class="{ 'translate-x-0': open, '-translate-x-full': !open }">
 
         {{-- Logo / Brand --}}
