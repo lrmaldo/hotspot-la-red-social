@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Registro público deshabilitado: los usuarios se crean internamente.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([
