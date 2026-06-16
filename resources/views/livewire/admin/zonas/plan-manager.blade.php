@@ -4,7 +4,7 @@
     </button>
 
     @if($showPlanModal)
-        <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="fixed inset-0 bg-gray-800/75 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg text-left" @click.away="$set('showPlanModal', false)">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $planId ? 'Editar Plan' : 'Crear Plan' }}</h3>
                 <form wire:submit.prevent="savePlan">
@@ -32,7 +32,7 @@
                         </div>
                         <div>
                             <label class="flex items-center">
-                                <input type="checkbox" wire:model.defer="is_active" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <input type="checkbox" wire:model.defer="is_active" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200">
                                 <span class="ml-2 text-sm text-gray-600">Activo</span>
                             </label>
                         </div>
