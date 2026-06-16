@@ -5,28 +5,28 @@
 
     @if($showPlanModal)
         <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg" @click.away="$set('showPlanModal', false)">
+            <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg text-left" @click.away="$set('showPlanModal', false)">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">{{ $planId ? 'Editar Plan' : 'Crear Plan' }}</h3>
                 <form wire:submit.prevent="savePlan">
                     <div class="space-y-4">
                         <div>
                             <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
-                            <input type="text" wire:model.defer="nombre" id="nombre" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <input type="text" wire:model.defer="nombre" id="nombre" class="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             @error('nombre') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
-                            <input type="text" wire:model.defer="descripcion" id="descripcion" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <input type="text" wire:model.defer="descripcion" id="descripcion" class="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label for="precio" class="block text-sm font-medium text-gray-700">Precio</label>
-                                <input type="number" step="0.01" wire:model.defer="precio" id="precio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <input type="number" step="0.01" wire:model.defer="precio" id="precio" class="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                 @error('precio') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div>
                                 <label for="duracion_minutos" class="block text-sm font-medium text-gray-700">Duración (minutos)</label>
-                                <input type="number" wire:model.defer="duracion_minutos" id="duracion_minutos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <input type="number" wire:model.defer="duracion_minutos" id="duracion_minutos" class="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                 @error('duracion_minutos') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>
