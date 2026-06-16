@@ -24,10 +24,11 @@
     </div>
 
     {{-- Sidebar: fixed en móvil (overlay), static en desktop --}}
-    <aside class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white border-r border-gray-200
+    {{-- -translate-x-full como clase estática evita que el sidebar aparezca antes de que Alpine inicialice --}}
+    <aside class="-translate-x-full fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-white border-r border-gray-200
                   transition-transform duration-300 ease-in-out
                   md:static md:translate-x-0 md:flex md:flex-shrink-0"
-           :class="open ? 'translate-x-0' : '-translate-x-full'">
+           :class="{ 'translate-x-0': open, '-translate-x-full': !open }">
 
         {{-- Header del sidebar --}}
         <div class="flex items-center justify-between flex-shrink-0 px-4 py-5">
