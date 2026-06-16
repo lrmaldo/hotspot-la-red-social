@@ -16,9 +16,9 @@
      x-data="{ open: false }"
      @keydown.escape.window="open = false">
 
-    {{-- Backdrop: solo móvil, usa opacity + pointer-events (no display) --}}
-    <div class="fixed inset-0 z-40 md:hidden transition-opacity duration-300"
-         :class="open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
+    {{-- opacity-0 pointer-events-none como clases estáticas evitan que el backdrop sea visible antes de que Alpine inicialice --}}
+    <div class="opacity-0 pointer-events-none fixed inset-0 z-40 md:hidden transition-opacity duration-300"
+         :class="{ 'opacity-100 pointer-events-auto': open, 'opacity-0 pointer-events-none': !open }"
          @click="open = false">
         <div class="absolute inset-0 bg-gray-600/75"></div>
     </div>
