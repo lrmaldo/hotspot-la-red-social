@@ -137,10 +137,10 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <div x-data="{ show: @entangle('showModal') }" 
-         x-show="show" 
-         style="display: none;" 
-         class="fixed inset-0 z-50 overflow-y-auto" 
+    <div x-data="{ show: @entangle('showModal') }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
          aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <!-- Backdrop -->
@@ -179,24 +179,41 @@
                             <!-- Upload Media -->
                             <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Archivo (Imagen o Video)</label>
-                                <div class="mt-1 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md bg-gray-50 hover:bg-gray-100 transition relative">
-                                    
-                                    <div class="space-y-1 text-center" wire:loading.remove wire:target="file">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                        <div class="flex text-sm text-gray-600 justify-center">
-                                            <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 border border-gray-300 px-3 py-1 shadow-sm">
-                                                <span>Seleccionar archivo</span>
-                                                <input id="file-upload" type="file" wire:model="file" accept="image/jpeg,image/png,image/webp,video/mp4" class="sr-only">
-                                            </label>
+                                {{-- x-on:livewire-upload-* es la forma correcta en Livewire v3 para detectar uploads --}}
+                                {{-- wire:loading wire:target="file" se dispara incorrectamente al hacer reset() --}}
+                                <div class="mt-1 border-2 border-gray-300 border-dashed rounded-md bg-gray-50 hover:bg-gray-100 transition"
+                                     x-data="{ uploading: false, progress: 0 }"
+                                     x-on:livewire-upload-start="uploading = true"
+                                     x-on:livewire-upload-finish="uploading = false; progress = 0"
+                                     x-on:livewire-upload-error="uploading = false; progress = 0"
+                                     x-on:livewire-upload-progress="progress = $event.detail.progress">
+
+                                    {{-- Estado normal: selector de archivo --}}
+                                    <div x-show="!uploading" class="flex items-center justify-center px-6 pt-5 pb-6">
+                                        <div class="space-y-1 text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                            <div class="flex text-sm text-gray-600 justify-center">
+                                                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 border border-gray-300 px-3 py-1 shadow-sm">
+                                                    <span>Seleccionar archivo</span>
+                                                    <input id="file-upload" type="file" wire:model="file" accept="image/jpeg,image/png,image/webp,video/mp4" class="sr-only">
+                                                </label>
+                                            </div>
+                                            <p class="text-xs text-gray-500">PNG, JPG, WEBP, MP4 hasta 50MB</p>
                                         </div>
-                                        <p class="text-xs text-gray-500">PNG, JPG, WEBP, MP4 hasta 50MB</p>
                                     </div>
-                                    
-                                    <div wire:loading wire:target="file" class="w-full text-center py-4">
-                                        <svg class="animate-spin mx-auto h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        <p class="mt-2 text-sm text-blue-600 font-semibold animate-pulse">Subiendo y procesando archivo...</p>
+
+                                    {{-- Estado subiendo: spinner + barra de progreso --}}
+                                    <div x-show="uploading" class="w-full text-center py-6 px-4">
+                                        <svg class="animate-spin mx-auto h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p class="mt-2 text-sm text-blue-600 font-semibold">Subiendo archivo... <span x-text="progress + '%'"></span></p>
+                                        <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                                            <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" :style="'width: ' + progress + '%'"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 @error('file') <span class="text-red-500 text-xs font-semibold">{{ $message }}</span> @enderror
