@@ -170,7 +170,7 @@
                             <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Zona Destino</label>
                                 <select wire:model="zona_id" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm" required>
-                                    <option value="" disabled>Selecciona una zona...</option>
+                                    <option value="" >Selecciona una zona...</option>
                                     @foreach($zonas as $zona)
                                         <option value="{{ $zona->id }}">{{ $zona->nombre }}</option>
                                     @endforeach
