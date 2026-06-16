@@ -11,7 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body class="h-screen flex overflow-hidden bg-gray-100 font-sans antialiased" x-data="{ sidebarOpen: false }">
+<body class="h-screen bg-gray-100 font-sans antialiased">
+
+<div class="h-screen flex overflow-hidden" x-data="{ sidebarOpen: false }">
 
     <!-- Mobile Sidebar Backdrop -->
     <div x-show="sidebarOpen" class="fixed inset-0 flex z-40 md:hidden" style="display: none;"
@@ -133,6 +135,8 @@
             </div>
         </main>
     </div>
+
+</div>
 
 </body>
 
