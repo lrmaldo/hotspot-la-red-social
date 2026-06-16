@@ -140,18 +140,27 @@
     <div x-data="{ show: @entangle('showModal') }"
          x-show="show"
          x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
+         class="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center sm:p-4"
          aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Backdrop -->
-            <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true" @click="show = false"></div>
-            
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <!-- Modal Panel -->
-            <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-                <form wire:submit="save">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+
+        <!-- Backdrop -->
+        <div x-show="show"
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/60 -z-10"
+             @click="show = false"></div>
+
+            <!-- Modal Panel: bottom-sheet en móvil, centrado en desktop -->
+            <div x-show="show"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+                 class="relative w-full bg-white rounded-t-2xl sm:rounded-xl shadow-xl overflow-hidden sm:max-w-3xl max-h-[92vh] flex flex-col">
+                <form wire:submit="save" class="flex flex-col overflow-hidden">
+                    <div class="overflow-y-auto px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
                             {{ $campanaId ? 'Editar Campaña' : 'Nueva Campaña' }}
                         </h3>
@@ -331,6 +340,5 @@
                     </div>
                 </form>
             </div>
-        </div>
     </div>
 </div>
