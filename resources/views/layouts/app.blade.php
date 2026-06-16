@@ -6,9 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Dashboard' }} - La Red Social</title>
 
-    <!-- Assets compilados (Tailwind vía Vite) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <!-- SweetAlert2 -->
+    <!-- CDN Tailwind CSS and SweetAlert2 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
