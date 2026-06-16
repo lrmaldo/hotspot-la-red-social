@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
+use App\Livewire\Admin\Users\Index as UsersIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
 use App\Livewire\Admin\Planes\Index as PlanesIndex;
 use App\Livewire\Admin\Vouchers\Index as VouchersIndex;
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/planes', PlanesIndex::class)->name('admin.planes');
         Route::get('/vouchers', VouchersIndex::class)->name('admin.vouchers');
         Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion');
+        Route::get('/users', UsersIndex::class)->name('admin.users');
     });
 });
 
