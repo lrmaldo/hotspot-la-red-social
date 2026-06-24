@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
+use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Users\Index as UsersIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
 use App\Livewire\Admin\Planes\Index as PlanesIndex;
@@ -57,8 +58,8 @@ Route::get('/', function () {
 
 // Rutas de Administración
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-    Route::view('/admin/dashboard', 'dashboard')->name('admin.dashboard');
+    Route::get('dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/admin/dashboard', Dashboard::class)->name('admin.dashboard');
     
     Route::prefix('admin')->group(function() {
         Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
