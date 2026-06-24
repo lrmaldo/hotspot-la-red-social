@@ -27,5 +27,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
         )
         ->name('security.edit');
 
-    Route::livewire('settings/stripe', StripeSettings::class)->name('stripe.edit');
+    Route::livewire('settings/stripe', StripeSettings::class)->name('stripe.edit')->middleware('can:seccion.stripe');
 });

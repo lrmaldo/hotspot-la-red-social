@@ -49,8 +49,9 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                @if ($user->hasRole('admin'))
-                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">Admin</span>
+                                @php $perfilUser = $user->roles->first()?->name; @endphp
+                                @if ($perfilUser)
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize">{{ $perfilUser }}</span>
                                 @endif
                                 <button wire:click="edit({{ $user->id }})" type="button"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
@@ -96,10 +97,11 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                @if ($user->hasRole('admin'))
-                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">Admin</span>
+                                @php $perfilUser = $user->roles->first()?->name; @endphp
+                                @if ($perfilUser)
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 capitalize">{{ $perfilUser }}</span>
                                 @else
-                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Sin rol</span>
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Sin perfil</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
@@ -207,18 +209,18 @@
                                class="block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition">
                     </div>
 
-                    {{-- Rol admin --}}
-                    <div class="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Rol de administrador</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Acceso completo al panel de administración</p>
-                        </div>
-                        <button type="button" @click="$wire.is_admin = !$wire.is_admin"
-                                :class="$wire.is_admin ? 'bg-blue-600' : 'bg-gray-200'"
-                                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none">
-                            <span :class="$wire.is_admin ? 'translate-x-5' : 'translate-x-1'"
-                                  class="inline-block h-4 w-4 mt-1 rounded-full bg-white shadow transform transition-transform duration-200"></span>
-                        </button>
+                    {{-- Perfil --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
+                        <select wire:model="perfil"
+                                class="block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition capitalize">
+                            <option value="">Sin perfil (sin acceso)</option>
+                            @foreach($perfiles as $p)
+                                <option value="{{ $p }}">{{ ucfirst($p) }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-gray-400">Define a qué secciones y métricas puede entrar el usuario.</p>
+                        @error('perfil') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
                 </div>
 

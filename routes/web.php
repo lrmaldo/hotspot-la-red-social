@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\Campanas\Index as CampanasIndex;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\Roles\Index as RolesIndex;
 use App\Livewire\Admin\Users\Index as UsersIndex;
 use App\Livewire\Admin\Configuracion\Index as ConfiguracionIndex;
 use App\Livewire\Admin\Planes\Index as PlanesIndex;
@@ -62,14 +63,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/dashboard', Dashboard::class)->name('admin.dashboard');
     
     Route::prefix('admin')->group(function() {
-        Route::get('/zonas', ZonasIndex::class)->name('admin.zonas');
-        Route::get('/zonas/{zona}/vpn', ZonasVpn::class)->name('admin.zonas.vpn');
-        Route::get('/zonas/{zona}/mikrotik', [\App\Http\Controllers\Admin\MikrotikDownloadController::class, 'download'])->name('admin.zonas.mikrotik');
-        Route::get('/campanas', CampanasIndex::class)->name('admin.campanas');
-        Route::get('/planes', PlanesIndex::class)->name('admin.planes');
-        Route::get('/vouchers', VouchersIndex::class)->name('admin.vouchers');
-        Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion');
-        Route::get('/users', UsersIndex::class)->name('admin.users');
+        Route::get('/zonas', ZonasIndex::class)->name('admin.zonas')->middleware('can:seccion.zonas');
+        Route::get('/zonas/{zona}/vpn', ZonasVpn::class)->name('admin.zonas.vpn')->middleware('can:seccion.zonas');
+        Route::get('/zonas/{zona}/mikrotik', [\App\Http\Controllers\Admin\MikrotikDownloadController::class, 'download'])->name('admin.zonas.mikrotik')->middleware('can:seccion.zonas');
+        Route::get('/campanas', CampanasIndex::class)->name('admin.campanas')->middleware('can:seccion.campanas');
+        Route::get('/planes', PlanesIndex::class)->name('admin.planes')->middleware('can:seccion.planes');
+        Route::get('/vouchers', VouchersIndex::class)->name('admin.vouchers')->middleware('can:seccion.vouchers');
+        Route::get('/configuracion', ConfiguracionIndex::class)->name('admin.configuracion')->middleware('can:seccion.configuracion');
+        Route::get('/users', UsersIndex::class)->name('admin.users')->middleware('can:seccion.usuarios');
+        Route::get('/perfiles', RolesIndex::class)->name('admin.roles')->middleware('can:seccion.usuarios');
     });
 });
 

@@ -1,6 +1,7 @@
 <div>
     <div class="mx-4 sm:mx-6 md:mx-8 space-y-6">
 
+        @can('dashboard.vouchers')
         {{-- Fila de métricas de vouchers --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
@@ -53,6 +54,9 @@
             </div>
         </div>
 
+        @endcan
+
+        @can('dashboard.ganancias')
         {{-- Gráfica de ganancias mes a mes --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
@@ -88,6 +92,9 @@
             </div>
         </div>
 
+        @endcan
+
+        @can('dashboard.trafico')
         {{-- Tráfico promedio por zona (vía API MikroTik, muestreo cada 5 min) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div class="mb-4">
@@ -132,6 +139,9 @@
             @endif
         </div>
 
+        @endcan
+
+        @can('dashboard.resumen')
         {{-- Resumen zonas / campañas --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <a href="{{ route('admin.zonas') }}" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center hover:border-blue-200 hover:shadow transition">
@@ -153,5 +163,6 @@
                 </div>
             </a>
         </div>
+        @endcan
     </div>
 </div>

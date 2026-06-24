@@ -15,25 +15,24 @@ class RolesAndPermissionsSeeder extends Seeder
         // Limpiar el cache de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Crear permisos
-        $permissions = [
-            'zonas.ver',
-            'zonas.crear',
-            'zonas.editar',
-            'zonas.eliminar',
-            'campanas.ver',
-            'campanas.crear',
-            'campanas.editar',
-            'campanas.eliminar',
-            'configuracion.editar',
-        ];
+        // Crear todos los permisos del catálogo (config/permisos.php).
+        $catalogo = collect(config('permisos', []))
+            ->flatMap(fn (array $permisos) => array_keys($permisos))
+            ->all();
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($catalogo as $permiso) {
+            Permission::firstOrCreate(['name' => $permiso]);
         }
 
-        // Crear rol admin y asignar todos los permisos
-        $roleAdmin = Role::firstOrCreate(['name' => 'admin']);
-        $roleAdmin->syncPermissions(Permission::all());
+        // Purgar permisos antiguos que ya no están en el catálogo
+        // (esquema previo zonas.ver/crear/... reemplazado por seccion.*).
+        Permission::whereNotIn('name', $catalogo)->delete();
+
+        // Roles del sistema: siempre con todos los permisos, no editables
+        // ni eliminables desde la UI.
+        foreach (['admin', 'super_admin'] as $nombre) {
+            Role::firstOrCreate(['name' => $nombre])
+                ->syncPermissions(Permission::all());
+        }
     }
 }

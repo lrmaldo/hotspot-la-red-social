@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Permission\Models\Role;
 
 #[Layout('layouts.app')]
 #[Title('Usuarios')]
@@ -22,7 +23,7 @@ class Index extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public bool $is_admin = false;
+    public string $perfil = ''; // nombre del rol asignado ('' = sin perfil)
     public ?int $deleteId = null;
 
     public function rules(): array
@@ -31,7 +32,7 @@ class Index extends Component
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|max:255|unique:users,email,' . $this->userId,
             'password' => $this->userId ? 'nullable|string|min:8|confirmed' : 'required|string|min:8|confirmed',
-            'is_admin' => 'boolean',
+            'perfil'   => 'nullable|string|exists:roles,name',
         ];
     }
 
@@ -49,7 +50,7 @@ class Index extends Component
         $this->email    = $user->email;
         $this->password = '';
         $this->password_confirmation = '';
-        $this->is_admin = $user->hasRole('admin');
+        $this->perfil = (string) ($user->roles->first()?->name ?? '');
         $this->showModal = true;
     }
 
@@ -68,11 +69,7 @@ class Index extends Component
 
         $user = User::updateOrCreate(['id' => $this->userId], $payload);
 
-        if ($data['is_admin']) {
-            $user->syncRoles(['admin']);
-        } else {
-            $user->syncRoles([]);
-        }
+        $user->syncRoles(! empty($data['perfil']) ? [$data['perfil']] : []);
 
         $this->showModal = false;
         $this->resetForm();
@@ -100,8 +97,7 @@ class Index extends Component
 
     public function resetForm(): void
     {
-        $this->reset(['userId', 'name', 'email', 'password', 'password_confirmation']);
-        $this->is_admin = false;
+        $this->reset(['userId', 'name', 'email', 'password', 'password_confirmation', 'perfil']);
         $this->resetValidation();
     }
 
@@ -112,6 +108,8 @@ class Index extends Component
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('livewire.admin.users.index', compact('users'));
+        $perfiles = Role::orderBy('name')->pluck('name');
+
+        return view('livewire.admin.users.index', compact('users', 'perfiles'));
     }
 }
