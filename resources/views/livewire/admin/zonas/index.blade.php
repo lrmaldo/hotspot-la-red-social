@@ -276,6 +276,12 @@
                                         <input type="text" wire:model="mikrotik_hotspot_profile" placeholder="default" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
                                         @error('mikrotik_hotspot_profile') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-green-800">Interfaz para tráfico (Dashboard)</label>
+                                        <input type="text" wire:model="mikrotik_interface" placeholder="ej. vlan40-hs" class="mt-1 block w-full rounded-md border-gray-300 border py-2 px-3 sm:text-sm focus:ring-green-500 focus:border-green-500 shadow-sm">
+                                        <p class="mt-1 text-xs text-green-900/70">Nombre exacto de la interfaz/VLAN del router cuyo throughput se mide para esta zona. Déjalo vacío para no medir tráfico.</p>
+                                        @error('mikrotik_interface') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
                                 </div>
                                 <p class="mt-2 text-xs text-green-900/80">
                                     Estas credenciales quedan asociadas a esta zona. Si activas venta de vouchers, Usuario API es obligatorio.

@@ -18,6 +18,7 @@ class Zona extends Model
         'mikrotik_password',
         'mikrotik_port',
         'mikrotik_hotspot_profile',
+        'mikrotik_interface',
         'vpn_l2tp_user',
         'vpn_l2tp_password',
         'vpn_tunnel_ip',
@@ -69,5 +70,13 @@ class Zona extends Model
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return HasMany<ZonaTraficoMuestra, $this>
+     */
+    public function traficoMuestras(): HasMany
+    {
+        return $this->hasMany(ZonaTraficoMuestra::class);
     }
 }

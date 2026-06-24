@@ -7,6 +7,7 @@ namespace App\Livewire\Admin;
 use App\Models\Campana;
 use App\Models\Voucher;
 use App\Models\Zona;
+use App\Models\ZonaTraficoMuestra;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -59,7 +60,53 @@ class Dashboard extends Component
             'ingresosMes'      => $ingresosMes,
             'ingresosTotales'  => $ingresosTotales,
             'ganancias'        => $ganancias,
+            'traficoZonas'     => $this->traficoPromedioPorZona(),
         ]);
+    }
+
+    /**
+     * Promedio de throughput (últimas 24 h) de cada zona con interfaz
+     * configurada. AVG + GROUP BY son portables (SQLite/MariaDB).
+     *
+     * @return array<int, array{nombre: string, rx_mbps: float, tx_mbps: float, muestras: int, ultima: ?string}>
+     */
+    private function traficoPromedioPorZona(): array
+    {
+        $zonas = Zona::query()
+            ->whereNotNull('mikrotik_interface')
+            ->where('mikrotik_interface', '!=', '')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        if ($zonas->isEmpty()) {
+            return [];
+        }
+
+        $desde = Carbon::now()->subDay();
+
+        $agg = ZonaTraficoMuestra::query()
+            ->where('capturado_at', '>=', $desde)
+            ->whereIn('zona_id', $zonas->pluck('id'))
+            ->selectRaw('zona_id')
+            ->selectRaw('AVG(rx_bps) as rx_avg')
+            ->selectRaw('AVG(tx_bps) as tx_avg')
+            ->selectRaw('COUNT(*) as muestras')
+            ->selectRaw('MAX(capturado_at) as ultima')
+            ->groupBy('zona_id')
+            ->get()
+            ->keyBy('zona_id');
+
+        return $zonas->map(function (Zona $zona) use ($agg): array {
+            $fila = $agg->get($zona->id);
+
+            return [
+                'nombre'   => $zona->nombre,
+                'rx_mbps'  => $fila ? round(((float) $fila->rx_avg) / 1_000_000, 2) : 0.0,
+                'tx_mbps'  => $fila ? round(((float) $fila->tx_avg) / 1_000_000, 2) : 0.0,
+                'muestras' => $fila ? (int) $fila->muestras : 0,
+                'ultima'   => $fila && $fila->ultima ? Carbon::parse($fila->ultima)->diffForHumans() : null,
+            ];
+        })->all();
     }
 
     /**

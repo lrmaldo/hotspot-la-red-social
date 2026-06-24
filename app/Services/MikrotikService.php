@@ -194,6 +194,54 @@ class MikrotikService
         }
     }
 
+    /**
+     * Mide la tasa instantánea de tráfico de una interfaz del router
+     * usando /interface/monitor-traffic una sola vez (once).
+     *
+     * @return array{rx_bps: int, tx_bps: int}|null  null si falla o no hay datos
+     */
+    public function medirThroughputInterfaz(string $interface): ?array
+    {
+        try {
+            $client = $this->conectar();
+
+            $query = new Query('/interface/monitor-traffic');
+            $query->equal('interface', $interface);
+            // 'once' hace que devuelva una sola lectura y cierre, en vez de
+            // quedarse haciendo streaming continuo.
+            $query->equal('once', '');
+
+            $response = $client->query($query)->read();
+
+            if (empty($response[0])) {
+                return null;
+            }
+
+            $row = $response[0];
+
+            // RouterOS usa guiones; según versión puede venir con o sin sufijo.
+            $rx = $row['rx-bits-per-second'] ?? $row['rx-bits-per-second-layer2'] ?? null;
+            $tx = $row['tx-bits-per-second'] ?? $row['tx-bits-per-second-layer2'] ?? null;
+
+            if ($rx === null && $tx === null) {
+                return null;
+            }
+
+            return [
+                'rx_bps' => (int) ($rx ?? 0),
+                'tx_bps' => (int) ($tx ?? 0),
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('MikroTik: no se pudo medir throughput de interfaz', [
+                'zona_id'   => $this->zona->id,
+                'interface' => $interface,
+                'error'     => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
     public function verificarConexion(): bool
     {
         try {

@@ -40,6 +40,7 @@ class Index extends Component
     public ?string $mikrotik_password = null;
     public ?int $mikrotik_port = 8728;
     public ?string $mikrotik_hotspot_profile = 'default';
+    public ?string $mikrotik_interface = null;
     public bool $is_active = true;
 
     public function rules(): array
@@ -65,6 +66,7 @@ class Index extends Component
             'mikrotik_password' => $debePedirPassword ? 'required|string|max:255' : 'nullable|string|max:255',
             'mikrotik_port' => 'nullable|integer|min:1|max:65535',
             'mikrotik_hotspot_profile' => 'nullable|string|max:100',
+            'mikrotik_interface' => 'nullable|string|max:100',
             'is_active' => 'boolean',
         ];
     }
@@ -103,6 +105,7 @@ class Index extends Component
         $this->facebook_url = $zona->facebook_url;
         $this->mikrotik_port = $zona->mikrotik_port ?: 8728;
         $this->mikrotik_hotspot_profile = $zona->mikrotik_hotspot_profile ?: 'default';
+        $this->mikrotik_interface = $zona->mikrotik_interface;
         $this->is_active = $zona->is_active;
         $this->showModal = true;
     }
@@ -166,7 +169,7 @@ class Index extends Component
         $this->reset([
             'zonaId', 'nombre', 'id_personalizado', 'descripcion',
             'hotspot_host', 'mikrotik_user', 'mikrotik_password',
-            'mikrotik_port', 'mikrotik_hotspot_profile',
+            'mikrotik_port', 'mikrotik_hotspot_profile', 'mikrotik_interface',
             'logo', 'logo_path', 'facebook_url',
         ]);
         $this->tipo_autenticacion = 'pin';

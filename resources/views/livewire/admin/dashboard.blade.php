@@ -88,15 +88,48 @@
             </div>
         </div>
 
-        {{-- Tráfico promedio por zona (pendiente — fase 2) --}}
+        {{-- Tráfico promedio por zona (vía API MikroTik, muestreo cada 5 min) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-1">
+            <div class="mb-4">
                 <h3 class="text-base font-semibold text-gray-800">Tráfico promedio por zona</h3>
-                <span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">Próximamente</span>
+                <p class="text-xs text-gray-400 mt-0.5">Promedio de las últimas 24 h · throughput de la interfaz del router</p>
             </div>
-            <p class="text-sm text-gray-500">
-                Esta métrica se obtiene del router por API y se está preparando con muestreo periódico.
-            </p>
+
+            @if(empty($traficoZonas))
+                <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-6 text-center">
+                    <p class="text-sm text-gray-600">Ninguna zona tiene interfaz configurada todavía.</p>
+                    <p class="text-xs text-gray-400 mt-1">Defínela en cada zona (campo «Interfaz para tráfico») para empezar a medir.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto -mx-2">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                                <th class="px-2 py-2">Zona</th>
+                                <th class="px-2 py-2 text-right">↓ Bajada (prom.)</th>
+                                <th class="px-2 py-2 text-right">↑ Subida (prom.)</th>
+                                <th class="px-2 py-2 text-right hidden sm:table-cell">Última medición</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach($traficoZonas as $t)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-2 py-2.5 font-medium text-gray-800">{{ $t['nombre'] }}</td>
+                                    <td class="px-2 py-2.5 text-right tabular-nums {{ $t['muestras'] ? 'text-blue-700' : 'text-gray-400' }}">
+                                        {{ $t['muestras'] ? number_format($t['rx_mbps'], 2) . ' Mbps' : '—' }}
+                                    </td>
+                                    <td class="px-2 py-2.5 text-right tabular-nums {{ $t['muestras'] ? 'text-emerald-700' : 'text-gray-400' }}">
+                                        {{ $t['muestras'] ? number_format($t['tx_mbps'], 2) . ' Mbps' : '—' }}
+                                    </td>
+                                    <td class="px-2 py-2.5 text-right text-gray-400 text-xs hidden sm:table-cell">
+                                        {{ $t['ultima'] ?? 'sin datos' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
         {{-- Resumen zonas / campañas --}}
