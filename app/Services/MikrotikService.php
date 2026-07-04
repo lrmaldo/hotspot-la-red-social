@@ -111,6 +111,19 @@ class MikrotikService
         return empty($users) ? null : $users[0];
     }
 
+    /**
+     * La librería RouterOS NO lanza excepción cuando el router rechaza un
+     * comando (!trap): devuelve el error en ['after']['message']. Sin esta
+     * verificación, un alta rechazada (p. ej. perfil inexistente) se
+     * reportaba como éxito.
+     */
+    private function errorDeRouter(array $respuesta): ?string
+    {
+        $mensaje = $respuesta['after']['message'] ?? null;
+
+        return is_string($mensaje) && $mensaje !== '' ? $mensaje : null;
+    }
+
     public function crearUsuarioHotspot(Voucher $voucher): bool
     {
         try {
@@ -129,7 +142,11 @@ class MikrotikService
                 $setQuery->equal('comment', $comment);
                 $setQuery->equal('limit-uptime', $limitUptime);
 
-                $client->query($setQuery)->read();
+                $respuesta = $client->query($setQuery)->read();
+
+                if ($error = $this->errorDeRouter($respuesta)) {
+                    throw new \RuntimeException('El router rechazó la actualización del usuario: ' . $error);
+                }
 
                 $voucher->update([
                     'mikrotik_user_id' => (string) $existingUser['.id'],
@@ -145,14 +162,21 @@ class MikrotikService
             $query->equal('comment', $comment);
             $query->equal('limit-uptime', $limitUptime);
 
-            $client->query($query)->read();
+            $respuesta = $client->query($query)->read();
+
+            if ($error = $this->errorDeRouter($respuesta)) {
+                throw new \RuntimeException('El router rechazó el alta del usuario: ' . $error);
+            }
 
             $createdUser = $this->buscarUsuarioPorCodigo($client, $voucher->codigo);
-            if ($createdUser && isset($createdUser['.id'])) {
-                $voucher->update([
-                    'mikrotik_user_id' => (string) $createdUser['.id'],
-                ]);
+
+            if (! $createdUser || ! isset($createdUser['.id'])) {
+                throw new \RuntimeException('El alta no dejó rastro: el usuario no existe en el router tras el add.');
             }
+
+            $voucher->update([
+                'mikrotik_user_id' => (string) $createdUser['.id'],
+            ]);
 
             return true;
         } catch (\Throwable $e) {
@@ -180,7 +204,11 @@ class MikrotikService
 
             $removeQuery = new Query('/ip/hotspot/user/remove');
             $removeQuery->equal('.id', $user['.id']);
-            $client->query($removeQuery)->read();
+            $respuesta = $client->query($removeQuery)->read();
+
+            if ($error = $this->errorDeRouter($respuesta)) {
+                throw new \RuntimeException('El router rechazó la eliminación del usuario: ' . $error);
+            }
 
             return true;
         } catch (\Throwable $e) {
