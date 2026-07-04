@@ -86,7 +86,9 @@ class PagoExitoso extends Component
                 return;
             }
 
-            DB::transaction(function (): void {
+            $voucherConfirmado = null;
+
+            DB::transaction(function () use (&$voucherConfirmado): void {
                 $voucher = Voucher::with('plan', 'zona')
                     ->lockForUpdate()
                     ->find($this->voucher->id);
@@ -130,10 +132,22 @@ class PagoExitoso extends Component
                     'mikrotik_synced_at' => $syncOk ? now() : null,
                 ]);
 
-                if ($voucher->comprador_email) {
-                    Mail::to($voucher->comprador_email)->send(new VoucherComprado($voucher));
-                }
+                $voucherConfirmado = $voucher;
             });
+
+            // Fuera de la transacción: un fallo del correo NUNCA debe
+            // revertir una venta ya cobrada.
+            if ($voucherConfirmado && $voucherConfirmado->comprador_email) {
+                try {
+                    Mail::to($voucherConfirmado->comprador_email)->send(new VoucherComprado($voucherConfirmado));
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo enviar el correo del voucher (venta OK)', [
+                        'voucher_id' => $voucherConfirmado->id,
+                        'email' => $voucherConfirmado->comprador_email,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         } catch (\Throwable $e) {
             Log::warning('PagoExitoso fallback: no se pudo confirmar/sincronizar pago', [
                 'zona_id' => $this->zona->id,

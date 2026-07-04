@@ -233,11 +233,22 @@ class StripeWebhookController
                 ]);
             }
 
-            if ($voucher->comprador_email) {
+        });
+
+        // Fuera de la transacción: un fallo del correo (SMTP mal configurado,
+        // proveedor caído) NUNCA debe revertir una venta ya cobrada.
+        if ($voucher->comprador_email) {
+            try {
                 Mail::to($voucher->comprador_email)
                     ->send(new VoucherComprado($voucher));
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo enviar el correo del voucher (venta OK)', [
+                    'voucher_id' => $voucher->id,
+                    'email' => $voucher->comprador_email,
+                    'error' => $e->getMessage(),
+                ]);
             }
-        });
+        }
     }
 
     private function handleCheckoutExpired(object $session): void
