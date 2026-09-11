@@ -137,7 +137,10 @@ class MikrotikService
             if ($existingUser) {
                 $setQuery = new Query('/ip/hotspot/user/set');
                 $setQuery->equal('.id', $existingUser['.id']);
-                $setQuery->equal('password', $voucher->codigo);
+                // Password vacío (usuario "name-only"): el canje solo envía el
+                // código como name. Así es compatible con los códigos que el
+                // operador genera de antemano (name con valor, password null).
+                $setQuery->equal('password', '');
                 $setQuery->equal('profile', $profile);
                 $setQuery->equal('comment', $comment);
                 $setQuery->equal('limit-uptime', $limitUptime);
@@ -157,7 +160,8 @@ class MikrotikService
 
             $query = new Query('/ip/hotspot/user/add');
             $query->equal('name', $voucher->codigo);
-            $query->equal('password', $voucher->codigo);
+            // Password vacío (usuario "name-only"): ver nota en el bloque set.
+            $query->equal('password', '');
             $query->equal('profile', $profile);
             $query->equal('comment', $comment);
             $query->equal('limit-uptime', $limitUptime);

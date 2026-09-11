@@ -1595,9 +1595,10 @@
                     submitButton.innerText = 'Conectando...';
                 }
 
-                if (!loginForm.password.value) {
-                    loginForm.password.value = loginForm.username.value;
-                }
+                // El password es SIEMPRE vacío (usuarios "name-only"): el canje
+                // envía únicamente el código como name. Así funciona igual con
+                // los vouchers del portal y con los códigos que el operador
+                // genera de antemano (password null). NO duplicar el PIN.
                 var chapPassword = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
 
                 var sendin = document.createElement('form');
@@ -1639,7 +1640,8 @@
                     return false;
                 }
 
-                form.password.value = form.username.value;
+                // Password vacío (usuarios "name-only"): no duplicar el PIN.
+                form.password.value = '';
 
                 var submitButton = document.querySelector('#hotspot-login-form button[type="submit"]');
                 if (submitButton) {
