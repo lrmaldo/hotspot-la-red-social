@@ -173,6 +173,23 @@ class CarruselCampanas extends Component
         $this->redirect($url);
     }
 
+    /**
+     * Registra en laravel.log cada intento de acceso gratis (trial) desde el
+     * portal, para diagnosticar por qué un cliente no obtiene el tiempo gratis.
+     */
+    public function registrarIntentoTrial(string $resultado, string $origen = 'video'): void
+    {
+        Log::info('Portal trial: intento de acceso gratis', [
+            'zona'              => $this->zona->id_personalizado,
+            'origen'            => $origen,
+            'resultado'         => $resultado,
+            'ip'                => $this->ip,
+            'mac'               => $this->mac,
+            'tiene_link_login'  => ! empty($this->link_login_only),
+            'link_login_only'   => $this->link_login_only,
+        ]);
+    }
+
     #[Title('Bienvenido al Portal')]
     public function render()
     {

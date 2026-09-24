@@ -842,10 +842,32 @@
                 @if($activeVideo)
                 <div x-show="showAd" x-cloak 
                      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
-                     x-data="{ 
-                        muted: true, 
-                        showSkip: {{ $activeVideo->skip_after_seconds ?? 0 }} <= 0,
-                        skipSeconds: {{ $activeVideo->skip_after_seconds ?? 0 }},
+                     x-data="{
+                        muted: true,
+                        // Sin 'saltar en X s' configurado, el acceso se habilita al TERMINAR el video.
+                        showSkip: false,
+                        skipSeconds: {{ (int) ($activeVideo->skip_after_seconds ?? 0) }},
+                        trialUrl: @js(! empty($link_login_only) ? $link_login_only . '?dst=' . ($link_orig_esc ?? '') . '&username=T-' . ($mac_esc ?? '') : ''),
+                        trialError: '',
+                        conectando: false,
+                        async conectarGratis(origen) {
+                            if (this.conectando) return;
+                            if (!this.trialUrl) {
+                                this.trialError = 'No detectamos tu conexión al WiFi. Desconéctate de la red, vuelve a conectarte y espera a que el portal se abra solo.';
+                                console.error('[trial] sin link-login-only del hotspot; no se puede otorgar acceso gratis');
+                                try { await $wire.registrarIntentoTrial('sin_link_login_only', origen); } catch (e) {}
+                                return;
+                            }
+                            this.conectando = true;
+                            this.trialError = '';
+                            // Registrar el intento sin bloquear más de 1.5 s la redirección al hotspot.
+                            try { await Promise.race([$wire.registrarIntentoTrial('redirigiendo_al_hotspot', origen), new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
+                            window.location.href = this.trialUrl;
+                        },
+                        videoTerminado() {
+                            this.showSkip = true;
+                            this.conectarGratis('video_terminado');
+                        },
                         init() {
                             this.$watch('showAd', value => {
                                 if (value) {
@@ -885,31 +907,35 @@
                             <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
                         @endif
                         
-                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
-                        
+                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" @ended="videoTerminado()" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
+
+                        <p x-cloak x-show="trialError" x-text="trialError"
+                           style="position:absolute; left:0; right:0; bottom:90px; margin:0 auto; max-width:90%; background:rgba(239,68,68,0.95); color:#fff; padding:10px 14px; border-radius:10px; font-size:0.9rem; text-align:center; z-index:100001;"></p>
+
                         <div class="video-controls">
-                            @if($activeVideo->skip_after_seconds)
-                                @php
-                                    $skipTextParts = explode('{s}', $activeVideo->skip_texto);
-                                @endphp
-                                <a :href="showSkip ? '{!! $link_login_only !!}?dst={!! $link_orig_esc ?? '' !!}&username=T-{!! $mac_esc ?? '' !!}' : '#'"
-                                   @click="if(!showSkip) { $event.preventDefault(); } else { $el.style.pointerEvents='none'; $el.style.opacity='0.6'; }"
-                                   class="btn-video-control"
-                                   :style="showSkip ? 'background-color: var(--color-primary); color: white; border-color: var(--color-primary); font-size: 1.1rem; padding: 12px 24px; text-decoration: none;' : 'text-decoration: none; cursor: default;'">
-                                    
-                                    <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
+                            @php
+                                $skipTextParts = explode('{s}', $activeVideo->skip_texto ?? 'Internet en {s}s');
+                            @endphp
+                            {{-- Siempre presente: con 'saltar en X s' se habilita por tiempo; sin él, al terminar el video. --}}
+                            <a href="#"
+                               @click.prevent="if(showSkip) { conectarGratis('boton'); }"
+                               class="btn-video-control"
+                               :style="showSkip ? 'background-color: var(--color-primary); color: white; border-color: var(--color-primary); font-size: 1.1rem; padding: 12px 24px; text-decoration: none;' + (conectando ? ' opacity:0.6; pointer-events:none;' : '') : 'text-decoration: none; cursor: default;'">
+
+                                <span x-show="!showSkip" class="flex items-center" style="display: flex; align-items: center;">
+                                    @if($activeVideo->skip_after_seconds)
                                         <span>{{ trim($skipTextParts[0] ?? 'Internet en') }}</span>
                                         <span x-text="skipSeconds" style="margin: 0 6px; font-size: 1.1rem;"></span>
                                         <span>{{ trim($skipTextParts[1] ?? 's') }}</span>
-                                    </span>
+                                    @else
+                                        <span>Mira el video para obtener Internet gratis</span>
+                                    @endif
+                                </span>
 
-                                    <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
-                                        Conectarse a Internet Gratis
-                                    </span>
-                                </a>
-                            @else
-                                <div></div>
-                            @endif
+                                <span x-cloak x-show="showSkip" class="flex items-center" style="display: flex; align-items: center;">
+                                    <span x-text="conectando ? 'Conectando...' : 'Conectarse a Internet Gratis'"></span>
+                                </span>
+                            </a>
 
                             <button @click="muted = !muted; if(!muted) { $refs.videoPlayer.muted = false; } else { $refs.videoPlayer.muted = true; }" 
                                     class="btn-video-control btn-video-mute" style="background: rgba(255,255,255,0.2);">
