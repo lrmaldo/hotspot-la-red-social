@@ -80,6 +80,13 @@
     <h2>Conectando a {{ $zona->nombre }}</h2>
     <p>Si no se redirecciona en unos segundos haga clic en continuar...</p>
 
+    {{-- Con datos móviles encendidos, el teléfono puede mandar parte del tráfico
+         por datos y el portal no termina de cargar. Esta página la sirve el
+         router, así que el aviso se ve aunque el portal falle. --}}
+    <div id="aviso-datos" style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d; border-radius:8px; padding:12px 16px; margin-bottom:20px; max-width:360px; font-size:0.95rem; line-height:1.4;">
+        📶 <strong>Si la página no carga</strong>, desactiva tus <strong>datos móviles</strong> mientras te conectas y vuelve a intentar.
+    </div>
+
     <form name="redirect" action="{{ route('portal.login', $zona->id_personalizado) }}" method="post">
         <input type="hidden" name="mac" value="$(mac)">
         <input type="hidden" name="ip" value="$(ip)">

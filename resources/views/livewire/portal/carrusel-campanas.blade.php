@@ -907,7 +907,7 @@
                             <div class="media-title" style="top: -40px; left: 0; right: 0; text-align: center; background: none; text-shadow: none;">{{ $activeVideo->titulo }}</div>
                         @endif
                         
-                        <video x-ref="videoPlayer" src="{{ $path }}" playsinline :muted="muted" @ended="videoTerminado()" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
+                        <video x-ref="videoPlayer" src="{{ $path }}" preload="none" playsinline :muted="muted" @ended="videoTerminado()" style="width:100%; height:100%; object-fit:contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);"></video>
 
                         <p x-cloak x-show="trialError" x-text="trialError"
                            style="position:absolute; left:0; right:0; bottom:90px; margin:0 auto; max-width:90%; background:rgba(239,68,68,0.95); color:#fff; padding:10px 14px; border-radius:10px; font-size:0.9rem; text-align:center; z-index:100001;"></p>
@@ -985,6 +985,9 @@
                     }
                  }">
                 <div class="auth-title">Acceder a Internet</div>
+                <p style="text-align:center; font-size:0.8rem; color:#92400e; background:#fef3c7; border-radius:8px; padding:6px 10px; margin:0 0 12px;">
+                    📶 ¿No carga bien? Desactiva tus datos móviles mientras te conectas.
+                </p>
 
                 <div class="auth-form">
                     <form id="hotspot-login-form" name="login" action="{{ $link_login_only ?: '#' }}" method="post" onSubmit="return doLogin()">
