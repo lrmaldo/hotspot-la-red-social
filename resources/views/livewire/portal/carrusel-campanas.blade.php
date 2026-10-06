@@ -1599,6 +1599,19 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        // Arma la URL de login del hotspot (GET). Ver nota en doLogin().
+        function buildHotspotLoginUrl(base, username, password) {
+            var params = new URLSearchParams({
+                username: username,
+                password: password,
+                dst: @js($link_orig ?? ''),
+                popup: 'true'
+            });
+            return base + (base.indexOf('?') === -1 ? '?' : '&') + params.toString();
+        }
+    </script>
+
     <!-- Script MD5 para autenticación CHAP de Mikrotik -->
     @if(!empty($chap_id))
         <script type="text/javascript" src="{{ asset('js/md5.js') }}"></script>
@@ -1627,28 +1640,11 @@
                 // genera de antemano (password null). NO duplicar el PIN.
                 var chapPassword = hexMD5('{{ $chap_id }}' + loginForm.password.value + '{{ $chap_challenge }}');
 
-                var sendin = document.createElement('form');
-                sendin.method = 'post';
-                sendin.action = @js($link_login_only);
-                sendin.style.display = 'none';
-
-                var fields = {
-                    username: loginForm.username.value,
-                    password: chapPassword,
-                    dst: @js($link_orig ?? ''),
-                    popup: 'true'
-                };
-
-                Object.keys(fields).forEach(function (key) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = fields[key];
-                    sendin.appendChild(input);
-                });
-
-                document.body.appendChild(sendin);
-                sendin.submit();
+                // Login por GET (navegación) en vez de POST: el portal es HTTPS y el
+                // login del hotspot es HTTP; un formulario POST de HTTPS a HTTP hace
+                // que Chrome muestre "La información que estás a punto de enviar no
+                // está protegida". El MikroTik acepta el login igual por GET.
+                window.location.href = buildHotspotLoginUrl(@js($link_login_only), loginForm.username.value, chapPassword);
                 return false;
             }
         </script>
@@ -1667,15 +1663,15 @@
                 }
 
                 // Password vacío (usuarios "name-only"): no duplicar el PIN.
-                form.password.value = '';
-
                 var submitButton = document.querySelector('#hotspot-login-form button[type="submit"]');
                 if (submitButton) {
                     submitButton.disabled = true;
                     submitButton.innerText = 'Conectando...';
                 }
 
-                return true;
+                // Login por GET (ver nota en la rama CHAP); password vacío (name-only).
+                window.location.href = buildHotspotLoginUrl(form.action, form.username.value, '');
+                return false;
             }
         </script>
     @endif
